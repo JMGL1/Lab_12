@@ -1,0 +1,96 @@
+/* ── PerfilPage Styles ── */
+.perfil-page { display: flex; flex-direction: column; gap: 24px; }
+
+/* Header del perfil */
+.perfil-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 28px 32px;
+  flex-wrap: wrap;
+}
+
+.perfil-avatar-wrap { flex-shrink: 0; }
+
+.perfil-avatar {
+  box-shadow: 0 8px 32px rgba(99,102,241,0.4);
+  border: 3px solid rgba(99,102,241,0.3);
+}
+
+.perfil-header-info { flex: 1; min-width: 200px; }
+
+.perfil-nombre {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.perfil-email {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.perfil-rol-card { display: inline-flex; flex-direction: column; }
+
+.perfil-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-left: auto;
+  text-align: right;
+}
+
+.perfil-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.perfil-meta-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.perfil-meta-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Formulario */
+.perfil-form-card { padding: 28px 32px; }
+
+/* Input toggle (reutilizado de LoginPage) */
+.input-wrapper { position: relative; }
+.input-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--r-sm);
+  transition: var(--t-fast);
+  line-height: 1;
+}
+.input-toggle:hover { color: var(--text-primary); }
+.form-input.with-toggle { padding-right: 42px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .perfil-header { flex-direction: column; text-align: center; align-items: center; }
+  .perfil-meta { margin-left: 0; text-align: center; }
+  .perfil-form-card { padding: 20px; }
+}

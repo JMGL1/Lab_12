@@ -1,0 +1,391 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
+import Layout from '../components/Layout';
+import api from '../services/api';
+import './ExplorePage.css';
+
+const CATEGORIAS = ['Todos','Fotografía','Cocina','Arte','Música','Programación','Marketing','Artesanía','Carpintería','Deporte','Idiomas','Otros'];
+
+const CAT_CONFIG = {
+  'Fotografía':  { gradient: 'linear-gradient(135deg,#667eea,#764ba2)', icon: '📸' },
+  'Cocina':      { gradient: 'linear-gradient(135deg,#f093fb,#f5576c)', icon: '🍳' },
+  'Arte':        { gradient: 'linear-gradient(135deg,#4facfe,#00f2fe)', icon: '🎨' },
+  'Música':      { gradient: 'linear-gradient(135deg,#43e97b,#38f9d7)', icon: '🎵' },
+  'Programación':{ gradient: 'linear-gradient(135deg,#30cfd0,#667eea)', icon: '💻' },
+  'Marketing':   { gradient: 'linear-gradient(135deg,#f7971e,#ffd200)', icon: '📊' },
+  'Artesanía':   { gradient: 'linear-gradient(135deg,#f953c6,#b91d73)', icon: '🪡' },
+  'Carpintería': { gradient: 'linear-gradient(135deg,#cd9f61,#8B4513)', icon: '🪚' },
+  'Deporte':     { gradient: 'linear-gradient(135deg,#11998e,#38ef7d)', icon: '⚽' },
+  'Idiomas':     { gradient: 'linear-gradient(135deg,#ee9ca7,#ffdde1)', icon: '🗣️' },
+  'default':     { gradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)',  icon: '📚' },
+};
+
+function getCatConfig(cat) { return CAT_CONFIG[cat] || CAT_CONFIG.default; }
+
+function formatFecha(fecha) {
+  if (!fecha) return '-';
+  return new Date(fecha + 'T12:00:00').toLocaleDateString('es-BO', { weekday:'short', day:'numeric', month:'long' });
+}
+
+function formatPrecio(precio) {
+  if (!precio || Number(precio) === 0) return 'Gratuito';
+  return `Bs. ${Number(precio).toFixed(0)}`;
+}
+
+/* ── Tarjeta de taller ── */
+function TallerCard({ taller, onVerDetalle }) {
+  const cfg   = getCatConfig(taller.categoria);
+  const agotado = taller.cupos_disponibles <= 0;
+
+  return (
+    <div className="taller-card" onClick={() => onVerDetalle(taller)}>
+      {/* Header con gradiente */}
+      <div className="taller-card-header" style={{ background: cfg.gradient }}>
+        <span className="taller-card-icon">{cfg.icon}</span>
+        <div className="taller-card-badges">
+          <span className="taller-precio-badge">
+            {formatPrecio(taller.precio)}
+          </span>
+          {agotado && <span className="taller-agotado-badge">Sin cupos</span>}
+        </div>
+      </div>
+
+      {/* Cuerpo */}
+      <div className="taller-card-body">
+        <span className="taller-categoria-tag">{taller.categoria}</span>
+        <h3 className="taller-card-title">{taller.titulo}</h3>
+        {taller.descripcion && (
+          <p className="taller-card-desc">{taller.descripcion.slice(0, 100)}{taller.descripcion.length > 100 ? '...' : ''}</p>
+        )}
+
+        <div className="taller-card-meta">
+          <div className="taller-meta-item">
+            <span>📅</span>
+            <span>{formatFecha(taller.fecha)}</span>
+          </div>
+          {taller.hora && (
+            <div className="taller-meta-item">
+              <span>🕐</span>
+              <span>{taller.hora}</span>
+            </div>
+          )}
+          {taller.ubicacion && (
+            <div className="taller-meta-item">
+              <span>📍</span>
+              <span>{taller.ubicacion}</span>
+            </div>
+          )}
+          {taller.duracion && (
+            <div className="taller-meta-item">
+              <span>⏱</span>
+              <span>{taller.duracion}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="taller-card-footer">
+        <div className="taller-instructor">
+          <div className="avatar avatar-sm" style={{background:'var(--gradient-brand)', fontSize:10}}>
+            {taller.instructor?.nombre?.[0]}{taller.instructor?.apellido?.[0]}
+          </div>
+          <span>{taller.instructor?.nombre} {taller.instructor?.apellido}</span>
+        </div>
+        <div className="taller-cupos">
+          <span className={`cupos-badge ${agotado ? 'cupos-none' : taller.cupos_disponibles <= 3 ? 'cupos-low' : 'cupos-ok'}`}>
+            {agotado ? '🔴 Agotado' : `${taller.cupos_disponibles} cupos`}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Modal de detalle + inscripción ── */
+function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
+  const { esEstudiante } = useAuth();
+  const cfg = getCatConfig(taller.categoria);
+  const yaInscrito = inscritoIds.includes(Number(taller.id));
+  const agotado = taller.cupos_disponibles <= 0;
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState('');
+  const [isError, setIsError] = useState(false);
+
+  async function handleInscribirse() {
+    setLoading(true); setMsg(''); setIsError(false);
+    try {
+      const { data } = await api.post('/inscripciones', { taller_id: taller.id });
+      setMsg(data.message);
+      onInscribirse(taller.id);
+    } catch (err) {
+      setMsg(err.response?.data?.error || 'Error al inscribirse');
+      setIsError(true);
+    } finally { setLoading(false); }
+  }
+
+  const whatsapp = taller.instructor?.telefono
+    ? `https://wa.me/${taller.instructor.telefono.replace(/\D/g,'')}?text=Hola,%20me%20interesa%20el%20taller%20"${encodeURIComponent(taller.titulo)}"`
+    : null;
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal taller-modal">
+        {/* Header del modal con gradiente */}
+        <div className="taller-modal-header" style={{ background: cfg.gradient }}>
+          <span className="taller-modal-icon">{cfg.icon}</span>
+          <div style={{flex:1}}>
+            <span className="taller-categoria-tag" style={{background:'rgba(255,255,255,0.2)',color:'#fff',borderColor:'rgba(255,255,255,0.3)'}}>
+              {taller.categoria}
+            </span>
+            <h2 className="taller-modal-title">{taller.titulo}</h2>
+          </div>
+          <button className="modal-close" onClick={onClose} style={{color:'rgba(255,255,255,0.8)'}}>✕</button>
+        </div>
+
+        <div className="taller-modal-body">
+          {/* Descripción */}
+          {taller.descripcion && (
+            <div className="modal-section">
+              <h4 className="modal-section-title">📋 Descripción</h4>
+              <p style={{color:'var(--text-secondary)',lineHeight:1.7,fontSize:14}}>{taller.descripcion}</p>
+            </div>
+          )}
+
+          {/* Detalles en grid */}
+          <div className="modal-section">
+            <h4 className="modal-section-title">📊 Detalles del taller</h4>
+            <div className="taller-details-grid">
+              <div className="detail-item"><span className="detail-icon">📅</span><div><p className="detail-label">Fecha</p><p className="detail-value">{formatFecha(taller.fecha)}</p></div></div>
+              {taller.hora     && <div className="detail-item"><span className="detail-icon">🕐</span><div><p className="detail-label">Hora</p><p className="detail-value">{taller.hora}</p></div></div>}
+              {taller.duracion && <div className="detail-item"><span className="detail-icon">⏱</span><div><p className="detail-label">Duración</p><p className="detail-value">{taller.duracion}</p></div></div>}
+              <div className="detail-item"><span className="detail-icon">💰</span><div><p className="detail-label">Precio</p><p className="detail-value" style={{color:'var(--success)',fontWeight:700}}>{formatPrecio(taller.precio)}</p></div></div>
+              <div className="detail-item"><span className="detail-icon">🖥</span><div><p className="detail-label">Modalidad</p><p className="detail-value" style={{textTransform:'capitalize'}}>{taller.modalidad}</p></div></div>
+              <div className="detail-item"><span className="detail-icon">👥</span><div><p className="detail-label">Cupos disponibles</p><p className="detail-value" style={{color: agotado ? 'var(--danger)' : 'var(--success)'}}>{agotado ? 'Agotado' : `${taller.cupos_disponibles} / ${taller.cupos_totales}`}</p></div></div>
+              {taller.ubicacion && <div className="detail-item" style={{gridColumn:'1/-1'}}><span className="detail-icon">📍</span><div><p className="detail-label">Ubicación</p><p className="detail-value">{taller.ubicacion}</p></div></div>}
+            </div>
+          </div>
+
+          {/* Instructor */}
+          <div className="modal-section">
+            <h4 className="modal-section-title">👤 Instructor</h4>
+            <div className="instructor-card">
+              <div className="avatar avatar-lg" style={{background:'var(--gradient-brand)'}}>
+                {taller.instructor?.nombre?.[0]}{taller.instructor?.apellido?.[0]}
+              </div>
+              <div style={{flex:1}}>
+                <p style={{fontWeight:700,fontSize:16,color:'var(--text-primary)',marginBottom:4}}>
+                  {taller.instructor?.nombre} {taller.instructor?.apellido}
+                </p>
+                <p style={{fontSize:13,color:'var(--text-secondary)'}}>{taller.instructor?.email}</p>
+                {taller.instructor?.telefono && (
+                  <p style={{fontSize:13,color:'var(--text-secondary)',marginTop:2}}>📞 {taller.instructor.telefono}</p>
+                )}
+              </div>
+              {whatsapp && (
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn btn-success btn-sm">
+                  💬 WhatsApp
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Aviso de pago */}
+          <div className="pago-aviso">
+            <span>💡</span>
+            <p>El pago se coordina directamente con el instructor vía WhatsApp o presencialmente. LearnUp no procesa pagos.</p>
+          </div>
+
+          {/* Mensaje de resultado */}
+          {msg && (
+            <div className={`alert ${isError ? 'alert-error' : 'alert-success'}`}>
+              <span>{isError ? '⚠' : '✓'}</span> {msg}
+            </div>
+          )}
+
+          {/* Botón inscripción */}
+          {esEstudiante && (
+            <div style={{marginTop:8}}>
+              {yaInscrito ? (
+                <div className="alert alert-success"><span>✓</span> Ya estás inscrito en este taller</div>
+              ) : (
+                <button className="btn btn-primary btn-full btn-lg" onClick={handleInscribirse} disabled={loading || agotado}>
+                  {loading ? <><div className="spinner spinner-sm"/> Inscribiendo...</> : agotado ? '🔴 Sin cupos disponibles' : '🎒 Inscribirme ahora'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════
+   PÁGINA EXPLORAR TALLERES
+════════════════════════════════════════════════════ */
+export default function ExplorePage() {
+  const { esEstudiante } = useAuth();
+  const [talleres,    setTalleres]    = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState('');
+  const [buscar,      setBuscar]      = useState('');
+  const [categoria,   setCategoria]   = useState('Todos');
+  const [total,       setTotal]       = useState(0);
+  const [page,        setPage]        = useState(1);
+  const [totalPages,  setTotalPages]  = useState(1);
+  const [tallerSeleccionado, setTallerSeleccionado] = useState(null);
+  const [inscritoIds, setInscritoIds] = useState([]);
+
+  const cargarTalleres = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const params = { page, limit: 9 };
+      if (categoria !== 'Todos') params.categoria = categoria;
+      if (buscar.trim()) params.buscar = buscar.trim();
+      const { data } = await api.get('/talleres', { params });
+      setTalleres(data.talleres || []);
+      setTotal(data.total || 0);
+      setTotalPages(data.totalPages || 1);
+    } catch { setError('Error al cargar los talleres'); }
+    finally { setLoading(false); }
+  }, [page, categoria, buscar]);
+
+  useEffect(() => { cargarTalleres(); }, [cargarTalleres]);
+  useEffect(() => { setPage(1); }, [categoria, buscar]);
+
+  // Cargar mis inscripciones si es estudiante
+  useEffect(() => {
+    if (!esEstudiante) return;
+    api.get('/inscripciones/mis').then(r => {
+      setInscritoIds((r.data.inscripciones || []).map(i => Number(i.taller_id)));
+    }).catch(() => {});
+  }, [esEstudiante]);
+
+  function onInscribirse(tallerId) {
+    setInscritoIds(prev => [...prev, Number(tallerId)]);
+    setTalleres(prev => prev.map(t =>
+      t.id === tallerId ? { ...t, cupos_disponibles: t.cupos_disponibles - 1 } : t
+    ));
+  }
+
+  return (
+    <Layout>
+      {tallerSeleccionado && (
+        <ModalDetalle
+          taller={tallerSeleccionado}
+          onClose={() => setTallerSeleccionado(null)}
+          onInscribirse={onInscribirse}
+          inscritoIds={inscritoIds}
+        />
+      )}
+
+      <div className="explore-page">
+        {/* Hero */}
+        <div className="explore-hero">
+          <div className="explore-hero-content">
+            <div className="explore-hero-badge">📍 Sucre, Bolivia</div>
+            <h1 className="explore-hero-title">
+              Descubre talleres<br/>
+              <span className="gradient-text-explore">cerca de ti</span>
+            </h1>
+            <p className="explore-hero-sub">
+              Encuentra instructores locales y aprende nuevas habilidades en tu comunidad
+            </p>
+            {/* Search */}
+            <div className="explore-search">
+              <span className="explore-search-icon">🔍</span>
+              <input
+                type="search"
+                className="form-input explore-search-input"
+                placeholder="Buscar talleres de fotografía, cocina, música..."
+                value={buscar}
+                onChange={e => setBuscar(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="explore-hero-deco" aria-hidden="true">
+            <div className="hero-orb hero-orb-1"/>
+            <div className="hero-orb hero-orb-2"/>
+          </div>
+        </div>
+
+        {/* Filtros de categoría */}
+        <div className="categoria-pills">
+          {CATEGORIAS.map(cat => (
+            <button
+              key={cat}
+              className={`categoria-pill ${categoria === cat ? 'active' : ''}`}
+              onClick={() => setCategoria(cat)}
+            >
+              {cat !== 'Todos' && <span>{getCatConfig(cat).icon}</span>}
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Contador y estado */}
+        <div className="explore-header-row">
+          <p className="explore-count">
+            {loading ? 'Buscando talleres...' : `${total} taller${total !== 1 ? 'es' : ''} disponible${total !== 1 ? 's' : ''}`}
+            {categoria !== 'Todos' && ` en ${categoria}`}
+          </p>
+          {(buscar || categoria !== 'Todos') && (
+            <button className="btn btn-ghost btn-sm" onClick={() => { setBuscar(''); setCategoria('Todos'); }}>
+              ✕ Limpiar filtros
+            </button>
+          )}
+        </div>
+
+        {error && <div className="alert alert-error"><span>⚠</span> {error}</div>}
+
+        {/* Grid de talleres */}
+        {loading ? (
+          <div className="talleres-grid">
+            {Array.from({length: 6}).map((_, i) => (
+              <div key={i} className="taller-card-skeleton">
+                <div className="skeleton-header"/>
+                <div className="skeleton-body">
+                  <div className="skeleton-line short"/>
+                  <div className="skeleton-line"/>
+                  <div className="skeleton-line medium"/>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : talleres.length === 0 ? (
+          <div className="explore-empty">
+            <div className="explore-empty-icon">🔍</div>
+            <h3>No hay talleres disponibles</h3>
+            <p>Prueba con otra categoría o amplía tu búsqueda</p>
+            {esEstudiante && (
+              <p style={{fontSize:13,color:'var(--text-muted)',marginTop:8}}>
+                Los instructores irán publicando nuevos talleres próximamente
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="talleres-grid">
+            {talleres.map(t => (
+              <TallerCard key={t.id} taller={t} onVerDetalle={setTallerSeleccionado} />
+            ))}
+          </div>
+        )}
+
+        {/* Paginación */}
+        {!loading && totalPages > 1 && (
+          <div className="pagination">
+            <span className="pagination-info">Página {page} de {totalPages}</span>
+            <div className="pagination-btns">
+              <button className="page-btn" onClick={() => setPage(p => p - 1)} disabled={page === 1}>‹</button>
+              {Array.from({length: totalPages}).map((_, i) => (
+                <button key={i+1} className={`page-btn ${page === i+1 ? 'active' : ''}`} onClick={() => setPage(i+1)}>{i+1}</button>
+              ))}
+              <button className="page-btn" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>›</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+}
