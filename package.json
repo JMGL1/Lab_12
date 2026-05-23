@@ -1,0 +1,9 @@
+{
+  "name": "learnup-fullstack",
+  "version": "1.0.0",
+  "description": "Despliegue unificado de LearnUp",
+  "scripts": {
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
+    "start": "node backend/src/server.js"
+  }
+}

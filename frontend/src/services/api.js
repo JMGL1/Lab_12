@@ -3,7 +3,7 @@ import axios from 'axios';
 /* ── Instancia de Axios con baseURL hacia el backend ── */
 const api = axios.create({
   //baseURL: 'http://localhost:3001',
-  baseURL: 'https://lab-12-7ezn.onrender.com/api',
+  baseURL: '/api',
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' }
 });

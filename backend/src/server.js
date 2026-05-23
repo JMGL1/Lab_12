@@ -31,9 +31,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', proyecto: 'LearnUp', timestamp: new Date().toISOString() });
 });
 
-// ── 404 handler ──────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.path}` });
+const path = require('path');
+
+// ── Servir Frontend (React) en Producción ─────────────────────
+const frontendPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // ── Error handler global ──────────────────────────────────────
