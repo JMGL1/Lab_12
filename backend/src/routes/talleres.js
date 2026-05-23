@@ -23,6 +23,7 @@ router.get('/', async (req, res) => {
       .from('talleres')
       .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono)', { count: 'exact' })
       .eq('activo', true)
+      .eq('estado_validacion', 'aprobado')
       .gte('fecha', new Date().toISOString().split('T')[0])
       .order('fecha', { ascending: true })
       .range(offset, offset + Number(limit) - 1);
@@ -57,6 +58,23 @@ router.get('/mis-talleres', verificarToken, async (req, res) => {
   } catch (err) {
     console.error('❌ Error GET /talleres/mis-talleres:', err.message);
     return res.status(500).json({ error: 'Error al obtener mis talleres' });
+  }
+});
+
+/* ── GET /api/talleres/pendientes — Solo Administrador ── */
+router.get('/pendientes', verificarToken, soloAdmin, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('talleres')
+      .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono)')
+      .eq('estado_validacion', 'pendiente')
+      .order('creado_en', { ascending: true });
+
+    if (error) throw error;
+    return res.json({ talleres: data || [] });
+  } catch (err) {
+    console.error('❌ Error GET /talleres/pendientes:', err.message);
+    return res.status(500).json({ error: 'Error al obtener talleres pendientes' });
   }
 });
 
@@ -119,7 +137,8 @@ router.post('/', verificarToken, async (req, res) => {
         ubicacion: ubicacion?.trim() || null,
         cupos_totales: cupos,
         cupos_disponibles: cupos,
-        instructor_id: req.usuario.id
+        instructor_id: req.usuario.id,
+        estado_validacion: 'pendiente'
       })
       .select('*')
       .single();
@@ -151,6 +170,9 @@ router.put('/:id', verificarToken, instructorPropietario, async (req, res) => {
       campos.cupos_disponibles = Number(cupos_totales);
     }
     if (activo !== undefined) campos.activo = activo;
+    
+    // Cualquier edición por parte del ofertante devuelve el producto a estado pendiente
+    campos.estado_validacion = 'pendiente';
 
     const { data, error } = await supabase.from('talleres').update(campos).eq('id', req.params.id).select('*').single();
     if (error) throw error;
@@ -168,6 +190,29 @@ router.delete('/:id', verificarToken, instructorPropietario, async (req, res) =>
     return res.json({ message: 'Taller eliminado exitosamente' });
   } catch (err) {
     return res.status(500).json({ error: 'Error al eliminar el taller' });
+  }
+});
+
+/* ── PATCH /api/talleres/:id/validacion — Validar contenido (Admin) ── */
+router.patch('/:id/validacion', verificarToken, soloAdmin, async (req, res) => {
+  try {
+    const { estado_validacion } = req.body;
+    if (!['aprobado', 'rechazado', 'pendiente'].includes(estado_validacion)) {
+      return res.status(400).json({ error: 'Estado de validación inválido' });
+    }
+
+    const { data, error } = await supabase
+      .from('talleres')
+      .update({ estado_validacion })
+      .eq('id', req.params.id)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return res.json({ message: `Taller actualizado a ${estado_validacion}`, taller: data });
+  } catch (err) {
+    console.error('❌ Error PATCH /talleres/:id/validacion:', err.message);
+    return res.status(500).json({ error: 'Error al actualizar validación del taller' });
   }
 });
 

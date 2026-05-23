@@ -33,10 +33,16 @@ CREATE TABLE IF NOT EXISTS talleres (
   cupos_totales     INTEGER       NOT NULL DEFAULT 10,
   cupos_disponibles INTEGER       NOT NULL DEFAULT 10,
   instructor_id     BIGINT        NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  estado_validacion TEXT          NOT NULL DEFAULT 'pendiente' 
+                                  CHECK (estado_validacion IN ('pendiente', 'aprobado', 'rechazado')),
   activo            BOOLEAN       NOT NULL DEFAULT true,
   creado_en         TIMESTAMPTZ   NOT NULL DEFAULT now(),
   actualizado_en    TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
+
+-- Si la tabla ya existe, añadimos la columna estado_validacion
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS estado_validacion TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado_validacion IN ('pendiente', 'aprobado', 'rechazado'));
+
 
 -- 4. Trigger para talleres
 DROP TRIGGER IF EXISTS talleres_updated_at ON talleres;

@@ -86,7 +86,13 @@ function ModalTaller({ taller, onClose, onGuardar }) {
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
-        {error && <div className="alert alert-error" style={{margin:'0 24px 0'}}><span>⚠</span> {error}</div>}
+        {esEditar && (
+          <div className="alert alert-warning" style={{margin:'16px 24px 0', fontSize: 13}}>
+            <span>⚠️</span> <strong>Atención:</strong> Cualquier cambio que realices enviará este taller nuevamente a estado <strong>Pendiente</strong> para su revisión.
+          </div>
+        )}
+
+        {error && <div className="alert alert-error" style={{margin:'16px 24px 0'}}><span>⚠</span> {error}</div>}
 
         <form id={esEditar ? 'edit-taller-form' : 'create-taller-form'} onSubmit={handleSubmit}>
           <div className="modal-body">
@@ -383,8 +389,11 @@ export default function TalleresInstructorPage() {
                     <span className="instructor-card-icon">{cfg.icon}</span>
                     <div className="instructor-card-header-info">
                       <span className="instructor-card-cat">{t.categoria}</span>
-                      {!t.activo && <span className="badge-inactivo">Pausado</span>}
-                      {pasado   && <span className="badge-pasado">Finalizado</span>}
+                      {t.estado_validacion === 'pendiente' && <span className="badge badge-warning" style={{marginLeft:4}}>🟡 Pendiente</span>}
+                      {t.estado_validacion === 'rechazado' && <span className="badge badge-danger" style={{marginLeft:4}}>🔴 Rechazado</span>}
+                      {t.estado_validacion === 'aprobado'  && <span className="badge badge-success" style={{marginLeft:4}}>🟢 Aprobado</span>}
+                      {!t.activo && <span className="badge-inactivo" style={{marginLeft:4}}>Pausado</span>}
+                      {pasado   && <span className="badge-pasado" style={{marginLeft:4}}>Finalizado</span>}
                     </div>
                   </div>
 

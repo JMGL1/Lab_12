@@ -8,6 +8,7 @@ import PerfilPage             from './pages/PerfilPage';
 import ExplorePage            from './pages/ExplorePage';
 import TalleresInstructorPage from './pages/TalleresInstructorPage';
 import MisInscripcionesPage   from './pages/MisInscripcionesPage';
+import ValidacionTalleresPage from './pages/ValidacionTalleresPage';
 
 function LoadingScreen() {
   return (
@@ -67,6 +68,7 @@ function AppRoutes() {
 
       {/* Solo admin */}
       <Route path="/usuarios"  element={<AdminRoute><UsuariosPage /></AdminRoute>} />
+      <Route path="/validacion" element={<AdminRoute><ValidacionTalleresPage /></AdminRoute>} />
 
       {/* Instructor (y admin puede ver también) */}
       <Route path="/mis-talleres" element={<InstructorRoute><TalleresInstructorPage /></InstructorRoute>} />
