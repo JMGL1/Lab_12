@@ -111,6 +111,20 @@ function AdminDashboard({ usuario }) {
 
 /* ── Vista instructor ── */
 function InstructorDashboard({ usuario }) {
+  const [talleres, setTalleres] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get('/talleres/instructor')
+      .then(r => setTalleres(r.data.talleres))
+      .catch(() => setTalleres([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const total = talleres.length;
+  const aprobados = talleres.filter(t => t.estado_validacion === 'aprobado').length;
+  const pendientes = talleres.filter(t => t.estado_validacion === 'pendiente').length;
+
   return (
     <div className="dashboard-role">
       <div className="dashboard-welcome">
@@ -131,28 +145,41 @@ function InstructorDashboard({ usuario }) {
           <h3>Panel de Instructor</h3>
           <p className="text-secondary" style={{marginTop:6,fontSize:14,lineHeight:1.6}}>
             Como instructor puedes crear y gestionar talleres, ver los estudiantes inscritos
-            y gestionar los cupos disponibles. Estas funcionalidades estarán disponibles próximamente.
+            y gestionar los cupos disponibles. Aquí tienes un resumen rápido de tu actividad.
           </p>
         </div>
       </div>
 
+      <h2 className="section-title">Resumen de Talleres</h2>
+      {loading ? (
+        <div className="spinner" style={{marginTop:20}}></div>
+      ) : (
+        <div className="stats-grid" style={{marginBottom: 32}}>
+          <StatCard icon="🏫" label="Total Talleres" value={total} color="245,158,11" />
+          <StatCard icon="🟢" label="Aprobados"      value={aprobados} color="16,185,129" />
+          <StatCard icon="🟡" label="Pendientes"     value={pendientes} color="234,179,8" />
+        </div>
+      )}
+
       <div className="upcoming-features">
-        <h2 className="section-title">Próximamente disponible</h2>
-        <div className="feature-list">
-          {[
-            { icon: '📚', title: 'Crear talleres', desc: 'Publica tus talleres con información completa' },
-            { icon: '👥', title: 'Ver inscritos', desc: 'Gestiona la lista de estudiantes inscritos' },
-            { icon: '📊', title: 'Estadísticas', desc: 'Visualiza el desempeño de tus talleres' },
-          ].map((f, i) => (
-            <div key={i} className="feature-item">
-              <span className="feature-icon">{f.icon}</span>
-              <div>
-                <p className="feature-title">{f.title}</p>
-                <p className="feature-desc">{f.desc}</p>
-              </div>
-              <span className="feature-badge">Próximo</span>
+        <h2 className="section-title">Acciones rápidas</h2>
+        <div className="quick-actions">
+          <Link to="/mis-talleres" className="quick-action-card">
+            <span className="quick-action-icon">📚</span>
+            <div>
+              <p className="quick-action-title">Mis Talleres</p>
+              <p className="quick-action-desc">Gestiona tus talleres creados y su contenido</p>
             </div>
-          ))}
+            <span className="quick-action-arrow">→</span>
+          </Link>
+          <Link to="/mis-talleres" className="quick-action-card">
+            <span className="quick-action-icon">✍️</span>
+            <div>
+              <p className="quick-action-title">Crear Nuevo Taller</p>
+              <p className="quick-action-desc">Sube una nueva oferta de aprendizaje</p>
+            </div>
+            <span className="quick-action-arrow">→</span>
+          </Link>
         </div>
       </div>
     </div>
@@ -180,29 +207,31 @@ function EstudianteDashboard({ usuario }) {
         <div>
           <h3>Panel de Estudiante</h3>
           <p className="text-secondary" style={{marginTop:6,fontSize:14,lineHeight:1.6}}>
-            Como estudiante puedes explorar el catálogo de talleres locales, ver detalles e inscribirte.
-            Estas funcionalidades estarán disponibles próximamente.
+            Como estudiante puedes explorar el catálogo de talleres, ver detalles e inscribirte.
+            Revisa tus opciones a continuación.
           </p>
         </div>
       </div>
 
       <div className="upcoming-features">
-        <h2 className="section-title">Próximamente disponible</h2>
-        <div className="feature-list">
-          {[
-            { icon: '🔍', title: 'Explorar talleres', desc: 'Busca talleres por categoría e interés' },
-            { icon: '📝', title: 'Inscribirte', desc: 'Reserva tu lugar en los talleres disponibles' },
-            { icon: '⭐', title: 'Reseñas', desc: 'Comparte tu experiencia con la comunidad' },
-          ].map((f, i) => (
-            <div key={i} className="feature-item">
-              <span className="feature-icon">{f.icon}</span>
-              <div>
-                <p className="feature-title">{f.title}</p>
-                <p className="feature-desc">{f.desc}</p>
-              </div>
-              <span className="feature-badge">Próximo</span>
+        <h2 className="section-title">Acciones rápidas</h2>
+        <div className="quick-actions">
+          <Link to="/explorar" className="quick-action-card">
+            <span className="quick-action-icon">🔍</span>
+            <div>
+              <p className="quick-action-title">Explorar Catálogo</p>
+              <p className="quick-action-desc">Busca nuevos talleres y oportunidades de aprendizaje</p>
             </div>
-          ))}
+            <span className="quick-action-arrow">→</span>
+          </Link>
+          <Link to="/mis-inscripciones" className="quick-action-card">
+            <span className="quick-action-icon">📚</span>
+            <div>
+              <p className="quick-action-title">Mis Inscripciones</p>
+              <p className="quick-action-desc">Revisa los talleres en los que te has anotado</p>
+            </div>
+            <span className="quick-action-arrow">→</span>
+          </Link>
         </div>
       </div>
     </div>
