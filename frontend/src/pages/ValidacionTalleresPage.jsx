@@ -9,6 +9,11 @@ export default function ValidacionTalleresPage() {
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
 
+  // Modales
+  const [tallerDetalle, setTallerDetalle] = useState(null);
+  const [tallerRechazar, setTallerRechazar] = useState(null);
+  const [motivoRechazo, setMotivoRechazo] = useState('');
+
   const cargarPendientes = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -31,13 +36,33 @@ export default function ValidacionTalleresPage() {
     setTimeout(() => setToast(null), 3500);
   }
 
-  async function handleValidacion(id, estado) {
+  async function handleAprobar(id) {
     try {
-      await api.patch(`/talleres/${id}/validacion`, { estado_validacion: estado });
-      mostrarToast(`Taller ${estado} exitosamente`);
+      await api.patch(`/talleres/${id}/validacion`, { estado_validacion: 'aprobado' });
+      mostrarToast(`Taller aprobado exitosamente`);
       setTalleres(prev => prev.filter(t => t.id !== id));
+      setTallerDetalle(null);
     } catch (err) {
-      mostrarToast(`Error al cambiar el estado`, 'error');
+      mostrarToast(`Error al aprobar el taller`, 'error');
+    }
+  }
+
+  async function handleRechazarSubmit(e) {
+    e.preventDefault();
+    if (!motivoRechazo.trim()) return;
+    
+    try {
+      await api.patch(`/talleres/${tallerRechazar.id}/validacion`, { 
+        estado_validacion: 'rechazado',
+        motivo_rechazo: motivoRechazo.trim()
+      });
+      mostrarToast(`Taller rechazado con motivo`);
+      setTalleres(prev => prev.filter(t => t.id !== tallerRechazar.id));
+      setTallerRechazar(null);
+      setTallerDetalle(null);
+      setMotivoRechazo('');
+    } catch (err) {
+      mostrarToast(`Error al rechazar el taller`, 'error');
     }
   }
 
@@ -78,18 +103,13 @@ export default function ValidacionTalleresPage() {
                 <div className="validacion-card-body">
                   <h3>{t.titulo}</h3>
                   <p className="instructor-info">👤 <strong>Instructor:</strong> {t.instructor?.nombre} {t.instructor?.apellido}</p>
-                  <p className="desc-text">{t.descripcion}</p>
-                  
-                  <div className="meta-info">
-                    <span><strong>Precio:</strong> {t.precio > 0 ? `Bs. ${t.precio}` : 'Gratis'}</span>
-                    <span><strong>Modalidad:</strong> {t.modalidad}</span>
-                  </div>
+                  <p className="desc-text">{t.descripcion?.substring(0, 80)}{t.descripcion?.length > 80 ? '...' : ''}</p>
                 </div>
                 <div className="validacion-card-actions">
-                  <button className="btn btn-danger" onClick={() => handleValidacion(t.id, 'rechazado')}>
-                    ❌ Rechazar
+                  <button className="btn btn-outline" style={{flex: 1}} onClick={() => setTallerDetalle(t)}>
+                    👁️ Ver Detalles
                   </button>
-                  <button className="btn btn-success" onClick={() => handleValidacion(t.id, 'aprobado')}>
+                  <button className="btn btn-success" onClick={() => handleAprobar(t.id)}>
                     ✅ Aprobar
                   </button>
                 </div>
@@ -98,6 +118,95 @@ export default function ValidacionTalleresPage() {
           </div>
         )}
       </div>
+
+      {/* Modal Detalles */}
+      {tallerDetalle && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{maxWidth: '600px'}}>
+            <div className="modal-header">
+              <h3 className="modal-title">📄 Detalles del Taller</h3>
+              <button className="modal-close" onClick={() => setTallerDetalle(null)}>✕</button>
+            </div>
+            <div className="modal-body" style={{padding: '24px'}}>
+              <h2 style={{marginTop: 0}}>{tallerDetalle.titulo}</h2>
+              <p style={{color: 'var(--text-secondary)'}}>{tallerDetalle.descripcion}</p>
+              
+              <div className="detalle-grid">
+                <div className="detalle-item">
+                  <span>Instructor</span>
+                  <strong>{tallerDetalle.instructor?.nombre} {tallerDetalle.instructor?.apellido}</strong>
+                </div>
+                <div className="detalle-item">
+                  <span>Categoría</span>
+                  <strong>{tallerDetalle.categoria}</strong>
+                </div>
+                <div className="detalle-item">
+                  <span>Fecha y Hora</span>
+                  <strong>{tallerDetalle.fecha} {tallerDetalle.hora ? `- ${tallerDetalle.hora}` : ''}</strong>
+                </div>
+                <div className="detalle-item">
+                  <span>Modalidad</span>
+                  <strong style={{textTransform:'capitalize'}}>{tallerDetalle.modalidad}</strong>
+                </div>
+                <div className="detalle-item">
+                  <span>Precio</span>
+                  <strong>{tallerDetalle.precio > 0 ? `Bs. ${tallerDetalle.precio}` : 'Gratis'}</strong>
+                </div>
+                <div className="detalle-item">
+                  <span>Cupos Totales</span>
+                  <strong>{tallerDetalle.cupos_totales} lugares</strong>
+                </div>
+              </div>
+            </div>
+            <div className="modal-actions" style={{display: 'flex', gap: '16px', padding: '16px 24px', background: 'var(--bg-alt)'}}>
+              <button className="btn btn-danger" style={{flex: 1}} onClick={() => setTallerRechazar(tallerDetalle)}>
+                ❌ Rechazar Taller
+              </button>
+              <button className="btn btn-success" style={{flex: 1}} onClick={() => handleAprobar(tallerDetalle.id)}>
+                ✅ Aprobar Taller
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Rechazo */}
+      {tallerRechazar && (
+        <div className="modal-overlay" style={{zIndex: 2000}}>
+          <div className="modal-content" style={{maxWidth: '450px'}}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{color: '#ef4444'}}>❌ Rechazar Taller</h3>
+              <button className="modal-close" onClick={() => { setTallerRechazar(null); setMotivoRechazo(''); }}>✕</button>
+            </div>
+            <form onSubmit={handleRechazarSubmit}>
+              <div className="modal-body" style={{padding: '24px'}}>
+                <p style={{marginBottom: '16px', color: 'var(--text-secondary)'}}>
+                  Por favor ingresa el motivo del rechazo para que el instructor pueda corregirlo:
+                </p>
+                <div className="form-group">
+                  <textarea 
+                    className="form-control" 
+                    rows="4"
+                    placeholder="Ej. La descripción es muy corta, faltan detalles del contenido..."
+                    value={motivoRechazo}
+                    onChange={(e) => setMotivoRechazo(e.target.value)}
+                    required
+                    autoFocus
+                  ></textarea>
+                </div>
+              </div>
+              <div className="modal-actions" style={{display: 'flex', gap: '16px', padding: '16px 24px', background: 'var(--bg-alt)'}}>
+                <button type="button" className="btn btn-outline" style={{flex: 1}} onClick={() => { setTallerRechazar(null); setMotivoRechazo(''); }}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-danger" style={{flex: 1}}>
+                  Confirmar Rechazo
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

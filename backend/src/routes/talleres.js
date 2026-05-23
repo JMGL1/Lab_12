@@ -173,6 +173,7 @@ router.put('/:id', verificarToken, instructorPropietario, async (req, res) => {
     
     // Cualquier edición por parte del ofertante devuelve el producto a estado pendiente
     campos.estado_validacion = 'pendiente';
+    campos.motivo_rechazo = null; // Limpiamos el motivo de rechazo al editar
 
     const { data, error } = await supabase.from('talleres').update(campos).eq('id', req.params.id).select('*').single();
     if (error) throw error;
@@ -196,14 +197,17 @@ router.delete('/:id', verificarToken, instructorPropietario, async (req, res) =>
 /* ── PATCH /api/talleres/:id/validacion — Validar contenido (Admin) ── */
 router.patch('/:id/validacion', verificarToken, soloAdmin, async (req, res) => {
   try {
-    const { estado_validacion } = req.body;
+    const { estado_validacion, motivo_rechazo } = req.body;
     if (!['aprobado', 'rechazado', 'pendiente'].includes(estado_validacion)) {
       return res.status(400).json({ error: 'Estado de validación inválido' });
     }
 
     const { data, error } = await supabase
       .from('talleres')
-      .update({ estado_validacion })
+      .update({ 
+        estado_validacion,
+        motivo_rechazo: estado_validacion === 'rechazado' ? motivo_rechazo : null 
+      })
       .eq('id', req.params.id)
       .select('*')
       .single();

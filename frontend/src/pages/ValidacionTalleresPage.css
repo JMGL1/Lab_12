@@ -10,13 +10,20 @@
 }
 
 .validacion-card {
-  background: white;
+  background: var(--bg-card); /* Ajustado para Dark Mode */
   border-radius: 12px;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.validacion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .validacion-card-header {
@@ -35,6 +42,7 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
 }
 
 .date-badge {
@@ -43,12 +51,12 @@
 }
 
 .validacion-card-body {
-  padding: 16px;
+  padding: 20px 16px;
   flex: 1;
 }
 
 .validacion-card-body h3 {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   font-size: 18px;
   color: var(--text-primary);
 }
@@ -57,24 +65,17 @@
   margin: 0 0 12px;
   font-size: 13px;
   color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-block;
 }
 
 .desc-text {
   font-size: 14px;
   color: var(--text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 0;
   line-height: 1.5;
-}
-
-.meta-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: var(--text-primary);
-  background: var(--bg-alt);
-  padding: 10px;
-  border-radius: 8px;
 }
 
 .validacion-card-actions {
@@ -82,12 +83,10 @@
   gap: 12px;
   padding: 16px;
   border-top: 1px solid var(--border);
+  background: var(--bg-card);
 }
 
-.validacion-card-actions .btn {
-  flex: 1;
-}
-
+/* Estado Vacío */
 .validacion-empty {
   text-align: center;
   padding: 80px 20px;
@@ -114,4 +113,34 @@
   margin: 0;
   color: var(--text-secondary);
   font-size: 16px;
+}
+
+/* Grilla de Detalles del Modal */
+.detalle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.detalle-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detalle-item span {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detalle-item strong {
+  font-size: 15px;
+  color: var(--text-primary);
 }

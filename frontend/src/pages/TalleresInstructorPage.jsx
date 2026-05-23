@@ -400,6 +400,11 @@ export default function TalleresInstructorPage() {
                   {/* Cuerpo */}
                   <div className="instructor-card-body">
                     <h3 className="instructor-card-title">{t.titulo}</h3>
+                    {t.estado_validacion === 'rechazado' && t.motivo_rechazo && (
+                      <div className="alert alert-error" style={{marginTop: 8, marginBottom: 8, fontSize: 13, padding: '8px 12px'}}>
+                        <strong>Motivo de rechazo:</strong> {t.motivo_rechazo}
+                      </div>
+                    )}
                     {t.descripcion && <p className="instructor-card-desc">{t.descripcion.slice(0,120)}...</p>}
 
                     <div className="instructor-card-meta">

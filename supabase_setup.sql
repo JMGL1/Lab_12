@@ -40,8 +40,9 @@ CREATE TABLE IF NOT EXISTS talleres (
   actualizado_en    TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
--- Si la tabla ya existe, añadimos la columna estado_validacion
+-- Si la tabla ya existe, añadimos las columnas
 ALTER TABLE talleres ADD COLUMN IF NOT EXISTS estado_validacion TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado_validacion IN ('pendiente', 'aprobado', 'rechazado'));
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS motivo_rechazo TEXT;
 
 
 -- 4. Trigger para talleres
