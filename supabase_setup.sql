@@ -60,7 +60,15 @@ CREATE TABLE IF NOT EXISTS inscripciones (
   UNIQUE(taller_id, estudiante_id)
 );
 
--- 6. Verificar resultado
+-- 6. Sprint 3: Búsqueda y Solicitudes
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS calificacion_promedio NUMERIC(3,1) NOT NULL DEFAULT 5.0;
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS num_calificaciones INTEGER NOT NULL DEFAULT 1;
+
+ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS estado_solicitud TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado_solicitud IN ('pendiente', 'aceptada', 'rechazada'));
+ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS mensaje_solicitud TEXT;
+ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS motivo_rechazo TEXT;
+
+-- 7. Verificar resultado
 SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public'
 ORDER BY table_name;

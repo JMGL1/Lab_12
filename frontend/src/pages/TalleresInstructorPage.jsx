@@ -177,13 +177,45 @@ function ModalTaller({ taller, onClose, onGuardar }) {
 function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
   const [inscritos, setInscritos] = useState([]);
   const [loading, setLoading]     = useState(true);
+  const [procesando, setProcesando] = useState(null);
+  const [modalRechazo, setModalRechazo] = useState(null);
+  const [motivoRechazo, setMotivoRechazo] = useState('');
 
-  useEffect(() => {
+  const cargarInscritos = useCallback(() => {
+    setLoading(true);
     api.get(`/talleres/${tallerId}/inscritos`)
       .then(r => setInscritos(r.data.inscritos || []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [tallerId]);
+
+  useEffect(() => { cargarInscritos(); }, [cargarInscritos]);
+
+  async function handleAceptar(id) {
+    setProcesando(id);
+    try {
+      await api.patch(`/inscripciones/${id}/estado`, { estado_solicitud: 'aceptada' });
+      cargarInscritos();
+    } catch (err) {
+      alert('Error al aceptar solicitud');
+    } finally { setProcesando(null); }
+  }
+
+  async function handleRechazar() {
+    if (!motivoRechazo.trim()) return alert('Debe ingresar un motivo');
+    setProcesando(modalRechazo.id);
+    try {
+      await api.patch(`/inscripciones/${modalRechazo.id}/estado`, { 
+        estado_solicitud: 'rechazada',
+        motivo_rechazo: motivoRechazo 
+      });
+      setModalRechazo(null);
+      setMotivoRechazo('');
+      cargarInscritos();
+    } catch (err) {
+      alert('Error al rechazar solicitud');
+    } finally { setProcesando(null); }
+  }
 
   function formatWhatsApp(telefono) {
     if (!telefono) return null;
@@ -208,31 +240,80 @@ function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
           ) : inscritos.length === 0 ? (
             <div style={{textAlign:'center',padding:40,color:'var(--text-muted)'}}>
               <div style={{fontSize:36,marginBottom:12}}>👤</div>
-              <p style={{fontWeight:600}}>Aún no hay inscritos</p>
-              <p style={{fontSize:12,marginTop:4}}>Comparte tu taller para conseguir estudiantes</p>
+              <p style={{fontWeight:600}}>Aún no hay inscritos ni solicitudes</p>
             </div>
           ) : (
             <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              <p style={{fontSize:12,color:'var(--text-muted)',marginBottom:4,fontWeight:600}}>
-                {inscritos.length} estudiante{inscritos.length !== 1 ? 's' : ''} inscrito{inscritos.length !== 1 ? 's' : ''}
-              </p>
-              {inscritos.map((i, idx) => (
-                <div key={i.id} className="inscrito-item">
-                  <div className="avatar avatar-sm">{i.estudiante?.nombre?.[0]}{i.estudiante?.apellido?.[0]}</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <p style={{fontWeight:600,fontSize:13,color:'var(--text-primary)'}}>{i.estudiante?.nombre} {i.estudiante?.apellido}</p>
-                    <p style={{fontSize:11,color:'var(--text-muted)'}}>{i.estudiante?.email}</p>
-                    {i.estudiante?.telefono && <p style={{fontSize:11,color:'var(--text-secondary)'}}>{i.estudiante.telefono}</p>}
+              {inscritos.map((i) => (
+                <div key={i.id} className="inscrito-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div className="avatar avatar-sm">{i.estudiante?.nombre?.[0]}{i.estudiante?.apellido?.[0]}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <p style={{fontWeight:600,fontSize:13,color:'var(--text-primary)'}}>{i.estudiante?.nombre} {i.estudiante?.apellido}</p>
+                        {i.estado_solicitud === 'pendiente' && <span className="badge badge-warning" style={{fontSize:10}}>Pendiente</span>}
+                        {i.estado_solicitud === 'aceptada' && <span className="badge badge-success" style={{fontSize:10}}>Aceptada</span>}
+                        {i.estado_solicitud === 'rechazada' && <span className="badge badge-danger" style={{fontSize:10}}>Rechazada</span>}
+                      </div>
+                      <p style={{fontSize:11,color:'var(--text-muted)'}}>{i.estudiante?.email}</p>
+                    </div>
+                    {i.estado_solicitud === 'aceptada' && i.estudiante?.telefono && (
+                      <a href={formatWhatsApp(i.estudiante.telefono)} target="_blank" rel="noopener noreferrer" className="btn btn-success btn-sm">💬 Contactar</a>
+                    )}
                   </div>
-                  {i.estudiante?.telefono && (
-                    <a href={formatWhatsApp(i.estudiante.telefono)} target="_blank" rel="noopener noreferrer"
-                      className="btn btn-success btn-sm">💬</a>
+                  
+                  {i.mensaje_solicitud && (
+                    <div style={{ marginTop: 8, padding: 8, background: 'var(--bg-secondary)', borderRadius: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                      <strong>Mensaje: </strong> {i.mensaje_solicitud}
+                    </div>
+                  )}
+
+                  {i.estado_solicitud === 'pendiente' && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8, justifyContent: 'flex-end' }}>
+                      <button className="btn btn-primary btn-sm" onClick={() => handleAceptar(i.id)} disabled={procesando === i.id}>
+                        {procesando === i.id ? '...' : '✅ Aceptar'}
+                      </button>
+                      <button className="btn btn-danger btn-sm" onClick={() => setModalRechazo(i)} disabled={procesando === i.id}>
+                        ❌ Rechazar
+                      </button>
+                    </div>
+                  )}
+                  
+                  {i.estado_solicitud === 'rechazada' && i.motivo_rechazo && (
+                    <div style={{ marginTop: 8, padding: 8, background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: 6, fontSize: 12 }}>
+                      <strong>Motivo del rechazo: </strong> {i.motivo_rechazo}
+                    </div>
                   )}
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {modalRechazo && (
+          <div className="modal-overlay" style={{ zIndex: 1100 }}>
+            <div className="modal" style={{maxWidth: 400}}>
+              <div className="modal-header">
+                <h3 className="modal-title">Rechazar solicitud</h3>
+              </div>
+              <div className="modal-body">
+                <label className="form-label">Motivo de rechazo *</label>
+                <textarea 
+                  className="form-input" 
+                  rows="3" 
+                  placeholder="Explica brevemente por qué rechazas la solicitud"
+                  value={motivoRechazo}
+                  onChange={e => setMotivoRechazo(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => { setModalRechazo(null); setMotivoRechazo(''); }}>Cancelar</button>
+                <button className="btn btn-danger" onClick={handleRechazar} disabled={procesando}>Confirmar Rechazo</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

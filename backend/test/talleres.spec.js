@@ -109,7 +109,7 @@ describe('Sprint 2: Gestión de Productos/Servicios (SDD)', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.taller.estado_validacion).toBe('aprobado');
-      expect(mockSupabase.update).toHaveBeenCalledWith({ estado_validacion: 'aprobado' });
+      expect(mockSupabase.update).toHaveBeenCalledWith({ estado_validacion: 'aprobado', motivo_rechazo: null });
     });
 
     it('El administrador debe poder rechazar un taller pendiente', async () => {

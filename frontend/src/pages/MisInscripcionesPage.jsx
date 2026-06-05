@@ -165,7 +165,12 @@ export default function MisInscripcionesPage() {
                               <span className="taller-categoria-tag">{t.categoria}</span>
                               <h3 className="inscripcion-titulo">{t.titulo}</h3>
                             </div>
-                            <span className="badge badge-success" style={{alignSelf:'flex-start',flexShrink:0}}>● Próximo</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                              <span className="badge badge-primary" style={{alignSelf:'flex-start',flexShrink:0}}>Próximo</span>
+                              {i.estado_solicitud === 'pendiente' && <span className="badge badge-warning" style={{alignSelf:'flex-start',flexShrink:0}}>🟡 Pendiente</span>}
+                              {i.estado_solicitud === 'aceptada' && <span className="badge badge-success" style={{alignSelf:'flex-start',flexShrink:0}}>🟢 Aceptada</span>}
+                              {i.estado_solicitud === 'rechazada' && <span className="badge badge-danger" style={{alignSelf:'flex-start',flexShrink:0}}>🔴 Rechazada</span>}
+                            </div>
                           </div>
 
                           <div className="inscripcion-meta">
@@ -176,6 +181,12 @@ export default function MisInscripcionesPage() {
                             <div className="inscripcion-meta-item"><span>💰</span><span style={{color:'var(--success)',fontWeight:600}}>{!t.precio || Number(t.precio)===0 ? 'Gratuito' : `Bs. ${t.precio}`}</span></div>
                             <div className="inscripcion-meta-item"><span>🗓</span><span style={{color:'var(--text-muted)'}}>Inscrito el {formatFechaInscripcion(i.inscrito_en)}</span></div>
                           </div>
+
+                          {i.estado_solicitud === 'rechazada' && i.motivo_rechazo && (
+                            <div style={{ padding: '8px 12px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: 6, fontSize: 13, marginBottom: 16 }}>
+                              <strong>Motivo del rechazo: </strong> {i.motivo_rechazo}
+                            </div>
+                          )}
 
                           {/* Instructor */}
                           <div className="inscripcion-instructor">

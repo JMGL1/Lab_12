@@ -54,6 +54,14 @@ function TallerCard({ taller, onVerDetalle }) {
       <div className="taller-card-body">
         <span className="taller-categoria-tag">{taller.categoria}</span>
         <h3 className="taller-card-title">{taller.titulo}</h3>
+        
+        {/* Estrellas */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8, fontSize: 13 }}>
+          <span style={{ color: '#fbbf24' }}>★</span>
+          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{taller.calificacion_promedio?.toFixed(1) || '5.0'}</span>
+          <span style={{ color: 'var(--text-muted)' }}>({taller.num_calificaciones || 0} reviews)</span>
+        </div>
+
         {taller.descripcion && (
           <p className="taller-card-desc">{taller.descripcion.slice(0, 100)}{taller.descripcion.length > 100 ? '...' : ''}</p>
         )}
@@ -111,11 +119,15 @@ function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [isError, setIsError] = useState(false);
+  const [mensajeSolicitud, setMensajeSolicitud] = useState('');
 
   async function handleInscribirse() {
     setLoading(true); setMsg(''); setIsError(false);
     try {
-      const { data } = await api.post('/inscripciones', { taller_id: taller.id });
+      const { data } = await api.post('/inscripciones', { 
+        taller_id: taller.id,
+        mensaje_solicitud: mensajeSolicitud
+      });
       setMsg(data.message);
       onInscribirse(taller.id);
     } catch (err) {
@@ -203,15 +215,31 @@ function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
             </div>
           )}
 
-          {/* Botón inscripción */}
+          {/* Botón inscripción y Mensaje de Solicitud */}
           {esEstudiante && (
             <div style={{marginTop:8}}>
               {yaInscrito ? (
-                <div className="alert alert-success"><span>✓</span> Ya estás inscrito en este taller</div>
+                <div className="alert alert-success"><span>✓</span> Ya enviaste una solicitud para este taller</div>
               ) : (
-                <button className="btn btn-primary btn-full btn-lg" onClick={handleInscribirse} disabled={loading || agotado}>
-                  {loading ? <><div className="spinner spinner-sm"/> Inscribiendo...</> : agotado ? '🔴 Sin cupos disponibles' : '🎒 Inscribirme ahora'}
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div>
+                    <label className="form-label" style={{ fontSize: 13, marginBottom: 4 }}>
+                      Mensaje para el instructor (Opcional):
+                    </label>
+                    <textarea 
+                      className="form-input" 
+                      rows="2" 
+                      placeholder="Ej: Me gustaría inscribirme porque..."
+                      value={mensajeSolicitud}
+                      onChange={(e) => setMensajeSolicitud(e.target.value)}
+                      disabled={loading || agotado}
+                      style={{ resize: 'none' }}
+                    />
+                  </div>
+                  <button className="btn btn-primary btn-full btn-lg" onClick={handleInscribirse} disabled={loading || agotado}>
+                    {loading ? <><div className="spinner spinner-sm"/> Enviando solicitud...</> : agotado ? '🔴 Sin cupos disponibles' : '🎒 Solicitar inscripción'}
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -231,6 +259,7 @@ export default function ExplorePage() {
   const [error,       setError]       = useState('');
   const [buscar,      setBuscar]      = useState('');
   const [categoria,   setCategoria]   = useState('Todos');
+  const [orden,       setOrden]       = useState('recientes');
   const [total,       setTotal]       = useState(0);
   const [page,        setPage]        = useState(1);
   const [totalPages,  setTotalPages]  = useState(1);
@@ -240,7 +269,7 @@ export default function ExplorePage() {
   const cargarTalleres = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const params = { page, limit: 9 };
+      const params = { page, limit: 9, orden };
       if (categoria !== 'Todos') params.categoria = categoria;
       if (buscar.trim()) params.buscar = buscar.trim();
       const { data } = await api.get('/talleres', { params });
@@ -249,7 +278,7 @@ export default function ExplorePage() {
       setTotalPages(data.totalPages || 1);
     } catch { setError('Error al cargar los talleres'); }
     finally { setLoading(false); }
-  }, [page, categoria, buscar]);
+  }, [page, categoria, buscar, orden]);
 
   useEffect(() => { cargarTalleres(); }, [cargarTalleres]);
   useEffect(() => { setPage(1); }, [categoria, buscar]);
@@ -325,16 +354,31 @@ export default function ExplorePage() {
         </div>
 
         {/* Contador y estado */}
-        <div className="explore-header-row">
-          <p className="explore-count">
-            {loading ? 'Buscando talleres...' : `${total} taller${total !== 1 ? 'es' : ''} disponible${total !== 1 ? 's' : ''}`}
-            {categoria !== 'Todos' && ` en ${categoria}`}
-          </p>
-          {(buscar || categoria !== 'Todos') && (
-            <button className="btn btn-ghost btn-sm" onClick={() => { setBuscar(''); setCategoria('Todos'); }}>
-              ✕ Limpiar filtros
-            </button>
-          )}
+        <div className="explore-header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <p className="explore-count" style={{ margin: 0 }}>
+              {loading ? 'Buscando talleres...' : `${total} taller${total !== 1 ? 'es' : ''} disponible${total !== 1 ? 's' : ''}`}
+              {categoria !== 'Todos' && ` en ${categoria}`}
+            </p>
+            {(buscar || categoria !== 'Todos') && (
+              <button className="btn btn-ghost btn-sm" onClick={() => { setBuscar(''); setCategoria('Todos'); }}>
+                ✕ Limpiar filtros
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Ordenar por:</span>
+            <select 
+              className="form-input" 
+              style={{ width: 'auto', padding: '6px 12px', fontSize: 14 }}
+              value={orden}
+              onChange={e => setOrden(e.target.value)}
+            >
+              <option value="recientes">Más recientes</option>
+              <option value="populares">Más populares</option>
+              <option value="mejor_calificados">Mejor calificados</option>
+            </select>
+          </div>
         </div>
 
         {error && <div className="alert alert-error"><span>⚠</span> {error}</div>}

@@ -16,7 +16,7 @@ async function instructorPropietario(req, res, next) {
 /* ── GET /api/talleres — Listado público con filtros ── */
 router.get('/', async (req, res) => {
   try {
-    const { categoria, buscar, page = 1, limit = 12 } = req.query;
+    const { categoria, buscar, orden, page = 1, limit = 12 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let query = supabase
@@ -24,9 +24,19 @@ router.get('/', async (req, res) => {
       .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono)', { count: 'exact' })
       .eq('activo', true)
       .eq('estado_validacion', 'aprobado')
-      .gte('fecha', new Date().toISOString().split('T')[0])
-      .order('fecha', { ascending: true })
-      .range(offset, offset + Number(limit) - 1);
+      .gte('fecha', new Date().toISOString().split('T')[0]);
+
+    if (orden === 'recientes') {
+      query = query.order('creado_en', { ascending: false });
+    } else if (orden === 'populares') {
+      query = query.order('cupos_disponibles', { ascending: true });
+    } else if (orden === 'mejor_calificados') {
+      query = query.order('calificacion_promedio', { ascending: false });
+    } else {
+      query = query.order('fecha', { ascending: true });
+    }
+
+    query = query.range(offset, offset + Number(limit) - 1);
 
     if (categoria && categoria !== 'Todos') query = query.eq('categoria', categoria);
     if (buscar?.trim()) query = query.ilike('titulo', `%${buscar.trim()}%`);
