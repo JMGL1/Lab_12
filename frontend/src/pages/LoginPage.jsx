@@ -104,47 +104,81 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form id="login-form" className="login-form" noValidate>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '14px', textAlign: 'center' }}>
-                Selecciona tu rol de acceso rápido para la demo:
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  style={{ justifyContent: 'center', padding: '12px', fontSize: '15px' }}
-                  onClick={(e) => { e.preventDefault(); setEmail('admin@learnup.bo'); setPassword('Admin123!'); login('admin@learnup.bo', 'Admin123!').then(()=>navigate('/dashboard')).catch(err=>setError(err.response?.data?.error||'Error')); }}
-                  disabled={loading}
-                >
-                  <span style={{ marginRight: '8px' }}>👑</span> Entrar como Administrador
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  onClick={(e) => { e.preventDefault(); setEmail('juan@learnup.bo'); setPassword('Instru123!'); login('juan@learnup.bo', 'Instru123!').then(()=>navigate('/dashboard')).catch(err=>setError(err.response?.data?.error||'Error')); }}
-                  disabled={loading}
-                >
-                  <span style={{ marginRight: '8px' }}>🏫</span> Entrar como Instructor
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  onClick={(e) => { e.preventDefault(); setEmail('maria@correo.com'); setPassword('Estud123!'); login('maria@correo.com', 'Estud123!').then(()=>navigate('/dashboard')).catch(err=>setError(err.response?.data?.error||'Error')); }}
-                  disabled={loading}
-                >
-                  <span style={{ marginRight: '8px' }}>🎒</span> Entrar como Estudiante
-                </button>
+            <form id="login-form" onSubmit={handleSubmit} className="login-form" noValidate>
+              {/* Email */}
+              <div className="form-group">
+                <label htmlFor="login-email" className="form-label">
+                  Correo electrónico
+                </label>
+                <div className="input-wrapper">
+                  <span className="input-icon">✉</span>
+                  <input
+                    id="login-email"
+                    type="email"
+                    className="form-input with-icon"
+                    placeholder="correo@ejemplo.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                    disabled={loading}
+                  />
+                </div>
               </div>
+
+              {/* Contraseña */}
+              <div className="form-group">
+                <label htmlFor="login-password" className="form-label">
+                  Contraseña
+                </label>
+                <div className="input-wrapper">
+                  <span className="input-icon">🔒</span>
+                  <input
+                    id="login-password"
+                    type={showPass ? 'text' : 'password'}
+                    className="form-input with-icon with-toggle"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="input-toggle"
+                    onClick={() => setShowPass(p => !p)}
+                    tabIndex={-1}
+                    aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showPass ? '🙈' : '👁'}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                id="login-submit"
+                type="submit"
+                className="btn btn-primary btn-lg btn-full"
+                disabled={loading}
+              >
+                {loading ? (
+                  <><div className="spinner spinner-sm" /> Iniciando sesión...</>
+                ) : (
+                  'Iniciar sesión →'
+                )}
+              </button>
             </form>
 
-            <div className="login-footer" style={{ marginTop: '32px' }}>
-              <p className="text-secondary" style={{fontSize: '13px', textAlign: 'center'}}>
+            <div className="login-footer" style={{ marginTop: '20px' }}>
+              <p className="text-secondary" style={{fontSize: '13px', textAlign: 'center', marginBottom: '16px'}}>
                 ¿Aún no tienes cuenta?{' '}
                 <Link to="/register" className="login-link">Regístrate gratis</Link>
               </p>
+              <div className="login-hint" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 'var(--r-md)', padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <p>💡 Cuenta demo de administrador:</p>
+                <code style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--primary-hover)', background: 'rgba(99,102,241,0.1)', padding: '2px 8px', borderRadius: '4px', width: 'fit-content' }}>admin@learnup.bo / Admin123!</code>
+              </div>
             </div>
           </div>
         </div>
