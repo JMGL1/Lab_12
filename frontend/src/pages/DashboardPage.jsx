@@ -48,7 +48,7 @@ function AdminDashboard({ usuario }) {
             {getSaludo()}, <span className="gradient-text">{usuario.nombre}</span> 👋
           </h1>
           <p className="dashboard-subtitle">
-            Panel de administración — LearnUp
+            Panel Principal de Administración — LearnUp
           </p>
         </div>
         <span className="badge badge-danger" style={{fontSize:'13px', padding:'6px 14px'}}>
@@ -88,7 +88,9 @@ function AdminDashboard({ usuario }) {
         <h2 className="section-title">Acciones rápidas</h2>
         <div className="quick-actions">
           <Link to="/usuarios" className="quick-action-card">
-            <span className="quick-action-icon">👥</span>
+            <span className="quick-action-icon" style={{color: '#8b5cf6'}}>
+              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
             <div>
               <p className="quick-action-title">Gestionar Usuarios</p>
               <p className="quick-action-desc">CRUD completo de usuarios del sistema</p>
@@ -96,7 +98,9 @@ function AdminDashboard({ usuario }) {
             <span className="quick-action-arrow">→</span>
           </Link>
           <Link to="/perfil" className="quick-action-card">
-            <span className="quick-action-icon">⚙️</span>
+            <span className="quick-action-icon" style={{color: '#06b6d4'}}>
+              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </span>
             <div>
               <p className="quick-action-title">Mi Perfil</p>
               <p className="quick-action-desc">Edita tu información personal</p>
@@ -132,7 +136,7 @@ function InstructorDashboard({ usuario }) {
           <h1 className="dashboard-title">
             {getSaludo()}, <span className="gradient-text">{usuario.nombre}</span> 👋
           </h1>
-          <p className="dashboard-subtitle">Bienvenido a tu panel de instructor</p>
+          <p className="dashboard-subtitle">Bienvenido a tu Panel de Instructor</p>
         </div>
         <span className="badge badge-warning" style={{fontSize:'13px', padding:'6px 14px'}}>
           🏫 Instructor
@@ -165,7 +169,9 @@ function InstructorDashboard({ usuario }) {
         <h2 className="section-title">Acciones rápidas</h2>
         <div className="quick-actions">
           <Link to="/mis-talleres" className="quick-action-card">
-            <span className="quick-action-icon">📚</span>
+            <span className="quick-action-icon" style={{color: '#3b82f6'}}>
+              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </span>
             <div>
               <p className="quick-action-title">Mis Talleres</p>
               <p className="quick-action-desc">Gestiona tus talleres creados y su contenido</p>
@@ -173,7 +179,9 @@ function InstructorDashboard({ usuario }) {
             <span className="quick-action-arrow">→</span>
           </Link>
           <Link to="/mis-talleres" className="quick-action-card">
-            <span className="quick-action-icon">✍️</span>
+            <span className="quick-action-icon" style={{color: '#10b981'}}>
+              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </span>
             <div>
               <p className="quick-action-title">Crear Nuevo Taller</p>
               <p className="quick-action-desc">Sube una nueva oferta de aprendizaje</p>
@@ -203,9 +211,9 @@ function EstudianteDashboard({ usuario }) {
       </div>
 
       <div className="role-info-card">
-        <div className="role-info-icon">🎓</div>
+        <div className="role-info-icon" style={{filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))'}}>🎓</div>
         <div>
-          <h3>Panel de Estudiante</h3>
+          <h3>Panel Principal de Estudiante</h3>
           <p className="text-secondary" style={{marginTop:6,fontSize:14,lineHeight:1.6}}>
             Como estudiante puedes explorar el catálogo de talleres, ver detalles e inscribirte.
             Revisa tus opciones a continuación.
@@ -217,7 +225,9 @@ function EstudianteDashboard({ usuario }) {
         <h2 className="section-title">Acciones rápidas</h2>
         <div className="quick-actions">
           <Link to="/explorar" className="quick-action-card">
-            <span className="quick-action-icon">🔍</span>
+            <span className="quick-action-icon" style={{color: '#f59e0b'}}>
+              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
             <div>
               <p className="quick-action-title">Explorar Catálogo</p>
               <p className="quick-action-desc">Busca nuevos talleres y oportunidades de aprendizaje</p>
@@ -225,7 +235,9 @@ function EstudianteDashboard({ usuario }) {
             <span className="quick-action-arrow">→</span>
           </Link>
           <Link to="/mis-inscripciones" className="quick-action-card">
-            <span className="quick-action-icon">📚</span>
+            <span className="quick-action-icon" style={{color: '#ec4899'}}>
+              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </span>
             <div>
               <p className="quick-action-title">Mis Inscripciones</p>
               <p className="quick-action-desc">Revisa los talleres en los que te has anotado</p>
