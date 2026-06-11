@@ -1,23 +1,25 @@
-/* ── Layout principal ── */
 .layout {
   display: flex;
   min-height: 100vh;
-  background: var(--gradient-bg);
+  background: transparent;
 }
 
-/* ── Sidebar ── */
+/* ── Sidebar Flotante ── */
 .sidebar {
   width: var(--sidebar-width);
-  min-height: 100vh;
-  background: rgba(255, 255, 255, 0.03);
-  border-right: 1px solid var(--border);
+  height: calc(100vh - 32px);
+  margin: 16px 0 16px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--r-xl);
   display: flex;
   flex-direction: column;
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: 16px;
   overflow: hidden;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   flex-shrink: 0;
 }
 
@@ -158,6 +160,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 32px;
+  animation: fadeIn 0.4s ease-out;
 }
 
 /* ── Responsive ── */

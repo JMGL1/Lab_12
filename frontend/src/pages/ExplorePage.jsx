@@ -32,6 +32,64 @@ function formatPrecio(precio) {
   return `Bs. ${Number(precio).toFixed(0)}`;
 }
 
+/* ── Componente Custom Dropdown para Ordenamiento ── */
+function SortDropdown({ orden, setOrden }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const options = [
+    { value: 'recientes', label: 'Más recientes', icon: '⏱️' },
+    { value: 'populares', label: 'Más populares', icon: '🔥' },
+    { value: 'mejor_calificados', label: 'Mejor calificados', icon: '⭐' }
+  ];
+
+  const current = options.find(o => o.value === orden);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button 
+        className="btn btn-secondary btn-sm" 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+      >
+        <span>{current?.icon}</span>
+        <span>{current?.label}</span>
+        <span style={{ fontSize: 10, marginLeft: 4 }}>▼</span>
+      </button>
+
+      {isOpen && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 90 }} onClick={() => setIsOpen(false)} />
+          <div style={{ 
+            position: 'absolute', top: '100%', right: 0, marginTop: 8, width: 220,
+            background: '#13132a', border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '12px', padding: 6, zIndex: 100,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(99, 102, 241, 0.2)'
+          }}>
+            {options.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => { setOrden(opt.value); setIsOpen(false); }}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', background: orden === opt.value ? 'rgba(99,102,241,0.15)' : 'transparent',
+                  border: 'none', borderRadius: '8px',
+                  color: orden === opt.value ? 'var(--primary-hover)' : 'var(--text-primary)',
+                  fontSize: 13, fontWeight: orden === opt.value ? 600 : 400,
+                  cursor: 'pointer', textAlign: 'left', transition: '0.2s'
+                }}
+                onMouseEnter={e => { if(orden !== opt.value) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                onMouseLeave={e => { if(orden !== opt.value) e.currentTarget.style.background = 'transparent' }}
+              >
+                <span>{opt.icon}</span>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ── Tarjeta de taller ── */
 function TallerCard({ taller, onVerDetalle }) {
   const cfg   = getCatConfig(taller.categoria);
@@ -368,16 +426,7 @@ export default function ExplorePage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Ordenar por:</span>
-            <select 
-              className="form-input" 
-              style={{ width: 'auto', padding: '6px 12px', fontSize: 14 }}
-              value={orden}
-              onChange={e => setOrden(e.target.value)}
-            >
-              <option value="recientes">Más recientes</option>
-              <option value="populares">Más populares</option>
-              <option value="mejor_calificados">Mejor calificados</option>
-            </select>
+            <SortDropdown orden={orden} setOrden={setOrden} />
           </div>
         </div>
 

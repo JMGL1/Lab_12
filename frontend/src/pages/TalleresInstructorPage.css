@@ -17,17 +17,21 @@
 
 /* Card del instructor */
 .instructor-taller-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--r-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: var(--t-normal);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .instructor-taller-card:hover {
-  border-color: rgba(99,102,241,0.3);
-  box-shadow: var(--shadow-card);
+  border-color: rgba(99,102,241,0.5);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(99,102,241,0.15);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .instructor-card-header {
