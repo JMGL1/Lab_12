@@ -68,7 +68,12 @@ ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS estado_solicitud TEXT NOT NUL
 ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS mensaje_solicitud TEXT;
 ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS motivo_rechazo TEXT;
 
--- 7. Verificar resultado
+-- 7. Sprint 4: Calificaciones de estudiantes y Orden por popularidad
+ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS calificacion INTEGER CHECK (calificacion >= 1 AND calificacion <= 5);
+ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS comentario_calificacion TEXT;
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS inscritos_count INTEGER NOT NULL DEFAULT 0;
+
+-- 8. Verificar resultado
 SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public'
 ORDER BY table_name;

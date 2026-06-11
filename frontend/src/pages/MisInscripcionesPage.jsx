@@ -66,6 +66,17 @@ export default function MisInscripcionesPage() {
 
   const hoy = new Date().toISOString().split('T')[0];
 
+  // Función para calificar
+  async function calificarTaller(inscripcionId, nota) {
+    try {
+      const { data } = await api.post(`/inscripciones/${inscripcionId}/calificar`, { calificacion: nota });
+      mostrarToast(data.message || 'Calificación enviada');
+      setInscripciones(prev => prev.map(i => i.id === inscripcionId ? { ...i, calificacion: nota } : i));
+    } catch (err) {
+      mostrarToast(err.response?.data?.error || 'Error al calificar', 'error');
+    }
+  }
+
   // Separar en próximos y pasados
   const proximos = inscripciones.filter(i => (i.taller?.fecha || '') >= hoy);
   const pasados  = inscripciones.filter(i => (i.taller?.fecha || '') <  hoy);
@@ -201,6 +212,34 @@ export default function MisInscripcionesPage() {
                               </a>
                             )}
                           </div>
+
+                          {/* Estrellas de Calificación */}
+                          {i.estado_solicitud === 'aceptada' && (
+                            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--r-md)', border: '1px solid var(--border)' }}>
+                              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                {i.calificacion ? 'Tu calificación:' : 'Califica este taller:'}
+                              </span>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {[1, 2, 3, 4, 5].map(star => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => !i.calificacion && calificarTaller(i.id, star)}
+                                    style={{
+                                      background: 'none', border: 'none', cursor: i.calificacion ? 'default' : 'pointer',
+                                      fontSize: '20px', lineHeight: 1, padding: 0,
+                                      color: (i.calificacion || 0) >= star ? '#fbbf24' : 'rgba(255,255,255,0.15)',
+                                      transition: 'transform 0.2s'
+                                    }}
+                                    onMouseEnter={e => { if (!i.calificacion) e.currentTarget.style.transform = 'scale(1.2)' }}
+                                    onMouseLeave={e => { if (!i.calificacion) e.currentTarget.style.transform = 'scale(1)' }}
+                                  >
+                                    ★
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Botón cancelar */}
@@ -250,6 +289,34 @@ export default function MisInscripcionesPage() {
                             <div className="avatar avatar-sm">{t.instructor?.nombre?.[0]}{t.instructor?.apellido?.[0]}</div>
                             <p style={{fontSize:13,color:'var(--text-secondary)'}}>{t.instructor?.nombre} {t.instructor?.apellido}</p>
                           </div>
+
+                          {/* Estrellas de Calificación para talleres pasados */}
+                          {i.estado_solicitud === 'aceptada' && (
+                            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--r-md)', border: '1px solid var(--border)' }}>
+                              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                {i.calificacion ? 'Tu calificación:' : 'Califica este taller:'}
+                              </span>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {[1, 2, 3, 4, 5].map(star => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => !i.calificacion && calificarTaller(i.id, star)}
+                                    style={{
+                                      background: 'none', border: 'none', cursor: i.calificacion ? 'default' : 'pointer',
+                                      fontSize: '20px', lineHeight: 1, padding: 0,
+                                      color: (i.calificacion || 0) >= star ? '#fbbf24' : 'rgba(255,255,255,0.15)',
+                                      transition: 'transform 0.2s'
+                                    }}
+                                    onMouseEnter={e => { if (!i.calificacion) e.currentTarget.style.transform = 'scale(1.2)' }}
+                                    onMouseLeave={e => { if (!i.calificacion) e.currentTarget.style.transform = 'scale(1)' }}
+                                  >
+                                    ★
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

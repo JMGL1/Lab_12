@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
     if (orden === 'recientes') {
       query = query.order('creado_en', { ascending: false });
     } else if (orden === 'populares') {
-      query = query.order('cupos_disponibles', { ascending: true });
+      query = query.order('inscritos_count', { ascending: false });
     } else if (orden === 'mejor_calificados') {
       query = query.order('calificacion_promedio', { ascending: false });
     } else {

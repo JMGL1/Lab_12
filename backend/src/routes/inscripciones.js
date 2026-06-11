@@ -85,10 +85,19 @@ router.delete('/:tallerId', verificarToken, async (req, res) => {
 
     await supabase.from('inscripciones').delete().eq('id', inscripcion.id);
 
-    // Devolver cupo
-    const { data: taller } = await supabase.from('talleres').select('cupos_disponibles, cupos_totales').eq('id', req.params.tallerId).single();
-    if (taller && taller.cupos_disponibles < taller.cupos_totales) {
-      await supabase.from('talleres').update({ cupos_disponibles: taller.cupos_disponibles + 1 }).eq('id', req.params.tallerId);
+    // Devolver cupo y decrementar inscritos_count si estaba aceptada
+    const { data: taller } = await supabase.from('talleres').select('cupos_disponibles, cupos_totales, inscritos_count').eq('id', req.params.tallerId).single();
+    if (taller) {
+      const updates = {};
+      if (taller.cupos_disponibles < taller.cupos_totales) {
+        updates.cupos_disponibles = taller.cupos_disponibles + 1;
+      }
+      if (inscripcion.estado_solicitud === 'aceptada' && taller.inscritos_count > 0) {
+        updates.inscritos_count = taller.inscritos_count - 1;
+      }
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('talleres').update(updates).eq('id', req.params.tallerId);
+      }
     }
 
     return res.json({ message: 'Inscripción cancelada exitosamente' });
@@ -136,12 +145,21 @@ router.patch('/:id/estado', verificarToken, async (req, res) => {
 
     if (errUpdate) throw errUpdate;
 
+    // Si es aceptada, incrementar inscritos_count
     // Si es rechazada, devolver cupo
-    if (estado_solicitud === 'rechazada') {
-      const tallerId = inscripcion.taller.id;
-      const { data: currentTaller } = await supabase.from('talleres').select('cupos_disponibles, cupos_totales').eq('id', tallerId).single();
-      if (currentTaller && currentTaller.cupos_disponibles < currentTaller.cupos_totales) {
-        await supabase.from('talleres').update({ cupos_disponibles: currentTaller.cupos_disponibles + 1 }).eq('id', tallerId).select('id').single();
+    const tallerId = inscripcion.taller.id;
+    const { data: currentTaller } = await supabase.from('talleres').select('cupos_disponibles, cupos_totales, inscritos_count').eq('id', tallerId).single();
+    
+    if (currentTaller) {
+      const updates = {};
+      if (estado_solicitud === 'aceptada') {
+        updates.inscritos_count = (currentTaller.inscritos_count || 0) + 1;
+      } else if (estado_solicitud === 'rechazada' && currentTaller.cupos_disponibles < currentTaller.cupos_totales) {
+        updates.cupos_disponibles = currentTaller.cupos_disponibles + 1;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('talleres').update(updates).eq('id', tallerId).select('id').single();
       }
     }
 
@@ -149,6 +167,68 @@ router.patch('/:id/estado', verificarToken, async (req, res) => {
   } catch (err) {
     console.error('❌ Error PATCH /inscripciones/:id/estado:', err.message);
     return res.status(500).json({ error: 'Error al actualizar el estado de la solicitud' });
+  }
+});
+
+/* ── POST /api/inscripciones/:id/calificar — Calificar un taller inscrito ── */
+router.post('/:id/calificar', verificarToken, async (req, res) => {
+  try {
+    const { calificacion, comentario_calificacion } = req.body;
+    const nota = parseInt(calificacion);
+    
+    if (isNaN(nota) || nota < 1 || nota > 5) {
+      return res.status(400).json({ error: 'La calificación debe ser un número entre 1 y 5' });
+    }
+
+    // Buscar inscripción y verificar que le pertenezca y esté aceptada
+    const { data: inscripcion, error: errInsc } = await supabase
+      .from('inscripciones')
+      .select('*, taller:talleres!taller_id(id)')
+      .eq('id', req.params.id)
+      .eq('estudiante_id', req.usuario.id)
+      .single();
+
+    if (errInsc || !inscripcion) {
+      return res.status(404).json({ error: 'Inscripción no encontrada' });
+    }
+
+    if (inscripcion.estado_solicitud !== 'aceptada') {
+      return res.status(400).json({ error: 'Solo puedes calificar los talleres en los que fuiste aceptado' });
+    }
+
+    if (inscripcion.calificacion) {
+      return res.status(400).json({ error: 'Ya has calificado este taller' });
+    }
+
+    // Actualizar la inscripción con la calificación
+    const { error: errUpdateInsc } = await supabase
+      .from('inscripciones')
+      .update({ calificacion: nota, comentario_calificacion: comentario_calificacion?.trim() || null })
+      .eq('id', req.params.id);
+
+    if (errUpdateInsc) throw errUpdateInsc;
+
+    // Recalcular promedio del taller
+    const tallerId = inscripcion.taller.id;
+    const { data: calificaciones } = await supabase
+      .from('inscripciones')
+      .select('calificacion')
+      .eq('taller_id', tallerId)
+      .not('calificacion', 'is', null);
+
+    let num_calificaciones = calificaciones?.length || 0;
+    let suma = calificaciones?.reduce((acc, curr) => acc + curr.calificacion, 0) || 0;
+    let promedio = num_calificaciones > 0 ? (suma / num_calificaciones).toFixed(1) : 5.0;
+
+    // Actualizar taller
+    await supabase.from('talleres')
+      .update({ calificacion_promedio: promedio, num_calificaciones })
+      .eq('id', tallerId);
+
+    return res.json({ message: 'Calificación enviada con éxito', calificacion: nota, promedio_actual: promedio });
+  } catch (err) {
+    console.error('❌ Error POST /inscripciones/:id/calificar:', err.message);
+    return res.status(500).json({ error: 'Error al enviar la calificación' });
   }
 });
 
