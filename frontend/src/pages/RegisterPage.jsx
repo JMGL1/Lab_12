@@ -63,7 +63,18 @@ export default function RegisterPage() {
       <div style={{width:'100%',maxWidth:'520px',position:'relative',zIndex:1}}>
         {/* Header */}
         <div style={{textAlign:'center',marginBottom:'28px'}}>
-          <div className="brand-logo" style={{margin:'0 auto 16px',width:'52px',height:'52px',fontSize:'24px'}}>L</div>
+          <div className="brand-logo" style={{margin:'0 auto 16px',width:'64px',height:'64px',background:'transparent',boxShadow:'none'}}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#reg_paint0)"/>
+              <path d="M2 17L12 22L22 17" stroke="url(#reg_paint1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="url(#reg_paint2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <defs>
+                <linearGradient id="reg_paint0" x1="2" y1="7" x2="22" y2="7" gradientUnits="userSpaceOnUse"><stop stopColor="#6366f1"/><stop offset="1" stopColor="#a855f7"/></linearGradient>
+                <linearGradient id="reg_paint1" x1="2" y1="19.5" x2="22" y2="19.5" gradientUnits="userSpaceOnUse"><stop stopColor="#06b6d4"/><stop offset="1" stopColor="#3b82f6"/></linearGradient>
+                <linearGradient id="reg_paint2" x1="2" y1="14.5" x2="22" y2="14.5" gradientUnits="userSpaceOnUse"><stop stopColor="#ec4899"/><stop offset="1" stopColor="#8b5cf6"/></linearGradient>
+              </defs>
+            </svg>
+          </div>
           <h1 style={{fontSize:'26px',fontWeight:'800',color:'var(--text-primary)',marginBottom:'6px'}}>
             Crear cuenta
           </h1>
@@ -72,7 +83,7 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid var(--border)',borderRadius:'var(--r-xl)',padding:'32px',backdropFilter:'blur(12px)'}}>
+        <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'var(--r-xl)',padding:'36px',backdropFilter:'blur(24px)',boxShadow:'0 24px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'}}>
 
           {error && (
             <div className="alert alert-error" style={{marginBottom:'16px'}}>

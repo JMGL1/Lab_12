@@ -52,16 +52,27 @@ export default function LoginPage() {
       <div className="login-container">
         {/* Panel izquierdo — Branding */}
         <div className="login-brand">
-          <div className="brand-logo">L</div>
-          <h1 className="brand-title">LearnUp</h1>
+          <div className="brand-logo" style={{ background: 'transparent', boxShadow: 'none' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#login_paint0)"/>
+              <path d="M2 17L12 22L22 17" stroke="url(#login_paint1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="url(#login_paint2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <defs>
+                <linearGradient id="login_paint0" x1="2" y1="7" x2="22" y2="7" gradientUnits="userSpaceOnUse"><stop stopColor="#6366f1"/><stop offset="1" stopColor="#a855f7"/></linearGradient>
+                <linearGradient id="login_paint1" x1="2" y1="19.5" x2="22" y2="19.5" gradientUnits="userSpaceOnUse"><stop stopColor="#06b6d4"/><stop offset="1" stopColor="#3b82f6"/></linearGradient>
+                <linearGradient id="login_paint2" x1="2" y1="14.5" x2="22" y2="14.5" gradientUnits="userSpaceOnUse"><stop stopColor="#ec4899"/><stop offset="1" stopColor="#8b5cf6"/></linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h1 className="brand-title" style={{ letterSpacing: '-0.04em' }}>LearnUp</h1>
           <p className="brand-subtitle">
-            Plataforma de talleres y cursos locales en Sucre, Bolivia
+            Plataforma educativa local en Sucre, Bolivia
           </p>
           <div className="brand-features">
             {[
-              { icon: '🎓', text: 'Aprende nuevas habilidades' },
-              { icon: '📚', text: 'Encuentra instructores locales' },
-              { icon: '🌟', text: 'Cursos presenciales verificados' },
+              { icon: '🚀', text: 'Aprende nuevas habilidades' },
+              { icon: '💡', text: 'Encuentra instructores locales' },
+              { icon: '🎓', text: 'Cursos presenciales verificados' },
             ].map((f, i) => (
               <div key={i} className="brand-feature">
                 <span>{f.icon}</span>
@@ -93,81 +104,47 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form id="login-form" onSubmit={handleSubmit} className="login-form" noValidate>
-              {/* Email */}
-              <div className="form-group">
-                <label htmlFor="login-email" className="form-label">
-                  Correo electrónico
-                </label>
-                <div className="input-wrapper">
-                  <span className="input-icon">✉</span>
-                  <input
-                    id="login-email"
-                    type="email"
-                    className="form-input with-icon"
-                    placeholder="correo@ejemplo.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    autoComplete="email"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
+            <form id="login-form" className="login-form" noValidate>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '14px', textAlign: 'center' }}>
+                Selecciona tu rol de acceso rápido para la demo:
+              </p>
 
-              {/* Contraseña */}
-              <div className="form-group">
-                <label htmlFor="login-password" className="form-label">
-                  Contraseña
-                </label>
-                <div className="input-wrapper">
-                  <span className="input-icon">🔒</span>
-                  <input
-                    id="login-password"
-                    type={showPass ? 'text' : 'password'}
-                    className="form-input with-icon with-toggle"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    required
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    className="input-toggle"
-                    onClick={() => setShowPass(p => !p)}
-                    tabIndex={-1}
-                    aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  >
-                    {showPass ? '🙈' : '👁'}
-                  </button>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ justifyContent: 'center', padding: '12px', fontSize: '15px' }}
+                  onClick={(e) => { e.preventDefault(); setEmail('admin@learnup.bo'); setPassword('Admin123!'); login('admin@learnup.bo', 'Admin123!').then(()=>navigate('/dashboard')).catch(err=>setError(err.response?.data?.error||'Error')); }}
+                  disabled={loading}
+                >
+                  <span style={{ marginRight: '8px' }}>👑</span> Entrar como Administrador
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  onClick={(e) => { e.preventDefault(); setEmail('juan@learnup.bo'); setPassword('Instru123!'); login('juan@learnup.bo', 'Instru123!').then(()=>navigate('/dashboard')).catch(err=>setError(err.response?.data?.error||'Error')); }}
+                  disabled={loading}
+                >
+                  <span style={{ marginRight: '8px' }}>🏫</span> Entrar como Instructor
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  onClick={(e) => { e.preventDefault(); setEmail('maria@correo.com'); setPassword('Estud123!'); login('maria@correo.com', 'Estud123!').then(()=>navigate('/dashboard')).catch(err=>setError(err.response?.data?.error||'Error')); }}
+                  disabled={loading}
+                >
+                  <span style={{ marginRight: '8px' }}>🎒</span> Entrar como Estudiante
+                </button>
               </div>
-
-              <button
-                id="login-submit"
-                type="submit"
-                className="btn btn-primary btn-lg btn-full"
-                disabled={loading}
-              >
-                {loading ? (
-                  <><div className="spinner spinner-sm" /> Iniciando sesión...</>
-                ) : (
-                  'Iniciar sesión →'
-                )}
-              </button>
             </form>
 
-            <div className="login-footer">
+            <div className="login-footer" style={{ marginTop: '32px' }}>
               <p className="text-secondary" style={{fontSize: '13px', textAlign: 'center'}}>
-                ¿No tienes cuenta?{' '}
+                ¿Aún no tienes cuenta?{' '}
                 <Link to="/register" className="login-link">Regístrate gratis</Link>
               </p>
-              <div className="login-hint">
-                <p>💡 Cuenta demo de administrador:</p>
-                <code>admin@learnup.bo / Admin123!</code>
-              </div>
             </div>
           </div>
         </div>
