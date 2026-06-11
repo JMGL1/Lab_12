@@ -73,7 +73,15 @@ ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS calificacion INTEGER CHECK (c
 ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS comentario_calificacion TEXT;
 ALTER TABLE talleres ADD COLUMN IF NOT EXISTS inscritos_count INTEGER NOT NULL DEFAULT 0;
 
--- 8. Verificar resultado
+-- 8. Sprint 5: Pagos y Enlaces de comunicación
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS metodo_pago TEXT DEFAULT 'efectivo' CHECK (metodo_pago IN ('efectivo', 'qr', 'ambos'));
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS qr_imagen TEXT;
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS enlace_comunicacion TEXT;
+
+ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS estado_pago TEXT DEFAULT 'pendiente' CHECK (estado_pago IN ('pendiente', 'pagado', 'exento'));
+ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS comprobante_pago TEXT;
+
+-- 9. Verificar resultado
 SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public'
 ORDER BY table_name;

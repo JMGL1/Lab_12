@@ -126,7 +126,7 @@ router.post('/', verificarToken, async (req, res) => {
     if (req.usuario.rol !== 'instructor' && req.usuario.rol !== 'administrador') {
       return res.status(403).json({ error: 'Solo los instructores pueden crear talleres' });
     }
-    const { titulo, descripcion, categoria, fecha, hora, duracion, precio, modalidad, ubicacion, cupos_totales } = req.body;
+    const { titulo, descripcion, categoria, fecha, hora, duracion, precio, modalidad, ubicacion, cupos_totales, metodo_pago, qr_imagen, enlace_comunicacion } = req.body;
 
     if (!titulo?.trim() || !categoria || !fecha) {
       return res.status(400).json({ error: 'Título, categoría y fecha son obligatorios' });
@@ -147,6 +147,9 @@ router.post('/', verificarToken, async (req, res) => {
         ubicacion: ubicacion?.trim() || null,
         cupos_totales: cupos,
         cupos_disponibles: cupos,
+        metodo_pago: metodo_pago || 'efectivo',
+        qr_imagen: qr_imagen || null,
+        enlace_comunicacion: enlace_comunicacion?.trim() || null,
         instructor_id: req.usuario.id,
         estado_validacion: 'pendiente'
       })
@@ -164,7 +167,7 @@ router.post('/', verificarToken, async (req, res) => {
 /* ── PUT /api/talleres/:id — Editar taller ── */
 router.put('/:id', verificarToken, instructorPropietario, async (req, res) => {
   try {
-    const { titulo, descripcion, categoria, fecha, hora, duracion, precio, modalidad, ubicacion, cupos_totales, activo } = req.body;
+    const { titulo, descripcion, categoria, fecha, hora, duracion, precio, modalidad, ubicacion, cupos_totales, activo, metodo_pago, qr_imagen, enlace_comunicacion } = req.body;
     const campos = {};
     if (titulo)       campos.titulo       = titulo.trim();
     if (descripcion !== undefined) campos.descripcion = descripcion?.trim() || null;
@@ -175,6 +178,9 @@ router.put('/:id', verificarToken, instructorPropietario, async (req, res) => {
     if (precio !== undefined) campos.precio = Number(precio) || 0;
     if (modalidad)    campos.modalidad    = modalidad;
     if (ubicacion !== undefined) campos.ubicacion = ubicacion?.trim() || null;
+    if (metodo_pago !== undefined) campos.metodo_pago = metodo_pago;
+    if (qr_imagen !== undefined) campos.qr_imagen = qr_imagen || null;
+    if (enlace_comunicacion !== undefined) campos.enlace_comunicacion = enlace_comunicacion?.trim() || null;
     if (cupos_totales !== undefined) {
       campos.cupos_totales = Number(cupos_totales);
       campos.cupos_disponibles = Number(cupos_totales);

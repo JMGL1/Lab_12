@@ -36,6 +36,9 @@ export default function MisInscripcionesPage() {
   const [cancelando,    setCancelando]    = useState(null);
   const [toast,         setToast]         = useState(null);
   const [confirmCancel, setConfirmCancel] = useState(null);
+  const [modalPago,     setModalPago]     = useState(null);
+  const [comprobante,   setComprobante]   = useState('');
+  const [subiendo,      setSubiendo]      = useState(false);
 
   function mostrarToast(msg, tipo = 'success') {
     setToast({ msg, tipo });
@@ -62,6 +65,28 @@ export default function MisInscripcionesPage() {
     } catch (err) {
       mostrarToast(err.response?.data?.error || 'Error al cancelar', 'error');
     } finally { setCancelando(null); setConfirmCancel(null); }
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setComprobante(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleSubirComprobante(e) {
+    e.preventDefault();
+    if (!comprobante) return alert('Debes seleccionar una imagen');
+    setSubiendo(true);
+    try {
+      await api.post(`/inscripciones/${modalPago.id}/comprobante`, { comprobante_pago: comprobante });
+      mostrarToast('Comprobante enviado. El instructor lo verificará pronto.');
+      setInscripciones(prev => prev.map(i => i.id === modalPago.id ? { ...i, comprobante_pago: comprobante } : i));
+      setModalPago(null); setComprobante('');
+    } catch (err) {
+      alert('Error al subir el comprobante');
+    } finally { setSubiendo(false); }
   }
 
   const hoy = new Date().toISOString().split('T')[0];
@@ -101,6 +126,46 @@ export default function MisInscripcionesPage() {
               <button className="btn btn-danger" onClick={() => handleCancelar(confirmCancel.id)} disabled={cancelando === confirmCancel.id}>
                 {cancelando === confirmCancel.id ? <><div className="spinner spinner-sm"/> Cancelando...</> : '🗑️ Cancelar inscripción'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Pago / Subir Comprobante */}
+      {modalPago && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setModalPago(null)}>
+          <div className="modal" style={{maxWidth: 480}}>
+            <div className="modal-header">
+              <h3 className="modal-title">💳 Pago del Taller</h3>
+              <button className="modal-close" onClick={() => setModalPago(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {modalPago.taller?.metodo_pago === 'efectivo' && (
+                <div className="alert alert-info" style={{marginBottom: 16}}>
+                  Este curso solo acepta pago en efectivo. Coordina con tu instructor presencialmente. Aún así, puedes subir una foto del recibo si te lo entregan.
+                </div>
+              )}
+              {modalPago.taller?.qr_imagen && (
+                <div style={{textAlign: 'center', marginBottom: 16}}>
+                  <p style={{marginBottom: 8, fontWeight: 600}}>Escanea este QR para pagar (Bs. {modalPago.taller.precio}):</p>
+                  <img src={modalPago.taller.qr_imagen} alt="QR de Pago" style={{maxWidth: 200, borderRadius: 8}} />
+                </div>
+              )}
+
+              <form onSubmit={handleSubirComprobante}>
+                <div className="form-group">
+                  <label className="form-label">Subir captura de pantalla / comprobante *</label>
+                  <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} required disabled={subiendo} style={{padding: '8px'}} />
+                </div>
+                {comprobante && <img src={comprobante} alt="Preview" style={{maxHeight: 120, borderRadius: 8, marginTop: 8}} />}
+                
+                <div style={{display: 'flex', gap: 8, marginTop: 24, justifyContent: 'flex-end'}}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setModalPago(null)} disabled={subiendo}>Cancelar</button>
+                  <button type="submit" className="btn btn-primary" disabled={subiendo}>
+                    {subiendo ? 'Subiendo...' : 'Subir Comprobante'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -181,6 +246,8 @@ export default function MisInscripcionesPage() {
                               {i.estado_solicitud === 'pendiente' && <span className="badge badge-warning" style={{alignSelf:'flex-start',flexShrink:0}}>🟡 Pendiente</span>}
                               {i.estado_solicitud === 'aceptada' && <span className="badge badge-success" style={{alignSelf:'flex-start',flexShrink:0}}>🟢 Aceptada</span>}
                               {i.estado_solicitud === 'rechazada' && <span className="badge badge-danger" style={{alignSelf:'flex-start',flexShrink:0}}>🔴 Rechazada</span>}
+                              {i.estado_solicitud === 'aceptada' && i.estado_pago === 'pendiente' && <span className="badge badge-warning" style={{alignSelf:'flex-start',flexShrink:0}}>💳 Pago Pendiente</span>}
+                              {i.estado_solicitud === 'aceptada' && i.estado_pago === 'pagado' && <span className="badge badge-success" style={{alignSelf:'flex-start',flexShrink:0}}>💳 Pagado</span>}
                             </div>
                           </div>
 
@@ -206,12 +273,23 @@ export default function MisInscripcionesPage() {
                               <p style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{t.instructor?.nombre} {t.instructor?.apellido}</p>
                               <p style={{fontSize:11,color:'var(--text-muted)'}}>{t.instructor?.email}</p>
                             </div>
-                            {whatsapp && (
-                              <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn btn-success btn-sm" style={{marginLeft:'auto'}}>
-                                💬 Contactar
-                              </a>
-                            )}
                           </div>
+
+                          {/* Opciones de Pago y Comunicación */}
+                          {i.estado_solicitud === 'aceptada' && (
+                            <div style={{ marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                              {i.estado_pago === 'pendiente' && (
+                                <button className="btn btn-primary btn-sm" onClick={() => setModalPago(i)}>
+                                  💳 Pagar o Subir Comprobante
+                                </button>
+                              )}
+                              {(i.estado_pago === 'pagado' || i.estado_pago === 'exento') && t.enlace_comunicacion && (
+                                <a href={t.enlace_comunicacion} target="_blank" rel="noopener noreferrer" className="btn btn-success btn-sm">
+                                  🔗 Unirse al Grupo (WhatsApp/Telegram)
+                                </a>
+                              )}
+                            </div>
+                          )}
 
                           {/* Estrellas de Calificación */}
                           {i.estado_solicitud === 'aceptada' && (

@@ -50,6 +50,9 @@ router.post('/', verificarToken, async (req, res) => {
 
     if (existente) return res.status(409).json({ error: 'Ya enviaste una solicitud para este taller' });
 
+    // Si el precio es 0, el pago está 'exento'
+    const estado_pago = taller.precio && Number(taller.precio) > 0 ? 'pendiente' : 'exento';
+
     // Inscribir (con estado pendiente) y decrementar cupo preventivamente
     const { error: errInscripcion } = await supabase
       .from('inscripciones')
@@ -57,6 +60,7 @@ router.post('/', verificarToken, async (req, res) => {
         taller_id, 
         estudiante_id: req.usuario.id,
         estado_solicitud: 'pendiente',
+        estado_pago,
         mensaje_solicitud: mensaje_solicitud?.trim() || null
       }).select('id').single();
 
@@ -229,6 +233,72 @@ router.post('/:id/calificar', verificarToken, async (req, res) => {
   } catch (err) {
     console.error('❌ Error POST /inscripciones/:id/calificar:', err.message);
     return res.status(500).json({ error: 'Error al enviar la calificación' });
+  }
+});
+
+/* ── POST /api/inscripciones/:id/comprobante — Subir comprobante de pago ── */
+router.post('/:id/comprobante', verificarToken, async (req, res) => {
+  try {
+    const { comprobante_pago } = req.body;
+    if (!comprobante_pago) return res.status(400).json({ error: 'El comprobante es obligatorio' });
+
+    // Verificar que la inscripción exista y pertenezca al estudiante
+    const { data: inscripcion, error: errInsc } = await supabase
+      .from('inscripciones')
+      .select('id')
+      .eq('id', req.params.id)
+      .eq('estudiante_id', req.usuario.id)
+      .single();
+
+    if (errInsc || !inscripcion) return res.status(404).json({ error: 'Inscripción no encontrada' });
+
+    // Actualizar comprobante
+    const { error: errUpdate } = await supabase
+      .from('inscripciones')
+      .update({ comprobante_pago })
+      .eq('id', req.params.id);
+
+    if (errUpdate) throw errUpdate;
+
+    return res.json({ message: 'Comprobante subido exitosamente' });
+  } catch (err) {
+    console.error('❌ Error POST /inscripciones/:id/comprobante:', err.message);
+    return res.status(500).json({ error: 'Error al subir el comprobante' });
+  }
+});
+
+/* ── PATCH /api/inscripciones/:id/pago — Verificar pago (Instructor) ── */
+router.patch('/:id/pago', verificarToken, async (req, res) => {
+  try {
+    const { estado_pago } = req.body; // 'pagado'
+    if (estado_pago !== 'pagado') return res.status(400).json({ error: 'Estado de pago inválido' });
+
+    // Buscar inscripción y taller
+    const { data: inscripcion, error: errInsc } = await supabase
+      .from('inscripciones')
+      .select('*, taller:talleres!taller_id(instructor_id)')
+      .eq('id', req.params.id)
+      .single();
+
+    if (errInsc || !inscripcion) return res.status(404).json({ error: 'Inscripción no encontrada' });
+
+    // Solo el instructor del taller puede verificar el pago
+    if (String(inscripcion.taller.instructor_id) !== String(req.usuario.id)) {
+      return res.status(403).json({ error: 'No tienes permiso para verificar este pago' });
+    }
+
+    // Actualizar estado de pago
+    const { error: errUpdate } = await supabase
+      .from('inscripciones')
+      .update({ estado_pago })
+      .eq('id', req.params.id);
+
+    if (errUpdate) throw errUpdate;
+
+    return res.json({ message: 'Pago verificado exitosamente' });
+  } catch (err) {
+    console.error('❌ Error PATCH /inscripciones/:id/pago:', err.message);
+    return res.status(500).json({ error: 'Error al verificar el pago' });
   }
 });
 

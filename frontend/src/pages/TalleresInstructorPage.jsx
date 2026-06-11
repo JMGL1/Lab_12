@@ -39,6 +39,9 @@ function ModalTaller({ taller, onClose, onGuardar }) {
     modalidad:    taller?.modalidad    || 'presencial',
     ubicacion:    taller?.ubicacion    || '',
     cupos_totales:taller?.cupos_totales|| 10,
+    metodo_pago:  taller?.metodo_pago  || 'efectivo',
+    qr_imagen:    taller?.qr_imagen    || '',
+    enlace_comunicacion: taller?.enlace_comunicacion || ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,6 +49,16 @@ function ModalTaller({ taller, onClose, onGuardar }) {
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
     if (error) setError('');
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setForm(f => ({ ...f, qr_imagen: ev.target.result }));
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleSubmit(e) {
@@ -159,6 +172,34 @@ function ModalTaller({ taller, onClose, onGuardar }) {
               <label className="form-label">Ubicación</label>
               <input name="ubicacion" className="form-input" value={form.ubicacion} onChange={handleChange} placeholder="Ej: Centro Cultural Sucre, Calle Junín 123" disabled={loading}/>
             </div>
+
+            {/* Opciones Adicionales para Talleres de Pago */}
+            {Number(form.precio) > 0 && (
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', marginTop: '16px' }}>
+                <h4 style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>💳 Opciones de Pago y Comunicación</h4>
+                <div className="form-group">
+                  <label className="form-label">Método de Cobro</label>
+                  <select name="metodo_pago" className="form-select" value={form.metodo_pago} onChange={handleChange} disabled={loading}>
+                    <option value="efectivo">Solo Efectivo (en persona)</option>
+                    <option value="qr">Pago por Código QR</option>
+                    <option value="ambos">Efectivo y QR</option>
+                  </select>
+                </div>
+
+                {(form.metodo_pago === 'qr' || form.metodo_pago === 'ambos') && (
+                  <div className="form-group">
+                    <label className="form-label">Subir imagen del QR *</label>
+                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} disabled={loading} style={{ padding: '8px' }} />
+                    {form.qr_imagen && <img src={form.qr_imagen} alt="QR" style={{ marginTop: '8px', maxHeight: '100px', borderRadius: '8px' }} />}
+                  </div>
+                )}
+
+                <div className="form-group" style={{ marginTop: '12px' }}>
+                  <label className="form-label">Enlace Privado (WhatsApp/Telegram)</label>
+                  <input name="enlace_comunicacion" className="form-input" value={form.enlace_comunicacion} onChange={handleChange} placeholder="Se enviará a los alumnos cuando verifiques su pago" disabled={loading}/>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="modal-footer">
@@ -180,6 +221,7 @@ function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
   const [procesando, setProcesando] = useState(null);
   const [modalRechazo, setModalRechazo] = useState(null);
   const [motivoRechazo, setMotivoRechazo] = useState('');
+  const [modalComprobante, setModalComprobante] = useState(null);
 
   const cargarInscritos = useCallback(() => {
     setLoading(true);
@@ -198,6 +240,16 @@ function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
       cargarInscritos();
     } catch (err) {
       alert('Error al aceptar solicitud');
+    } finally { setProcesando(null); }
+  }
+
+  async function handleVerificarPago(id) {
+    setProcesando(id);
+    try {
+      await api.patch(`/inscripciones/${id}/pago`, { estado_pago: 'pagado' });
+      cargarInscritos();
+    } catch (err) {
+      alert('Error al verificar pago');
     } finally { setProcesando(null); }
   }
 
@@ -257,9 +309,18 @@ function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
                       </div>
                       <p style={{fontSize:11,color:'var(--text-muted)'}}>{i.estudiante?.email}</p>
                     </div>
-                    {i.estado_solicitud === 'aceptada' && i.estudiante?.telefono && (
-                      <a href={formatWhatsApp(i.estudiante.telefono)} target="_blank" rel="noopener noreferrer" className="btn btn-success btn-sm">💬 Contactar</a>
-                    )}
+
+                    {/* Estado de pago */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                      {i.estado_pago === 'pendiente' && <span className="badge badge-warning" style={{fontSize:10}}>Pago: Pendiente</span>}
+                      {i.estado_pago === 'pagado' && <span className="badge badge-success" style={{fontSize:10}}>Pago: Verificado</span>}
+                      {i.estado_pago === 'exento' && <span className="badge badge-secondary" style={{fontSize:10}}>Exento</span>}
+                      {i.comprobante_pago && (
+                        <button className="btn btn-secondary btn-sm" onClick={() => setModalComprobante(i.comprobante_pago)} style={{ padding: '2px 8px', fontSize: 11 }}>
+                          Ver comprobante
+                        </button>
+                      )}
+                    </div>
                   </div>
                   
                   {i.mensaje_solicitud && (
@@ -275,6 +336,14 @@ function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
                       </button>
                       <button className="btn btn-danger btn-sm" onClick={() => setModalRechazo(i)} disabled={procesando === i.id}>
                         ❌ Rechazar
+                      </button>
+                    </div>
+                  )}
+
+                  {i.estado_solicitud === 'aceptada' && i.estado_pago === 'pendiente' && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8, justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+                      <button className="btn btn-success btn-sm" onClick={() => handleVerificarPago(i.id)} disabled={procesando === i.id}>
+                        {procesando === i.id ? '...' : '💰 Verificar Pago'}
                       </button>
                     </div>
                   )}
@@ -311,6 +380,17 @@ function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
                 <button className="btn btn-secondary" onClick={() => { setModalRechazo(null); setMotivoRechazo(''); }}>Cancelar</button>
                 <button className="btn btn-danger" onClick={handleRechazar} disabled={procesando}>Confirmar Rechazo</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Ver Comprobante */}
+        {modalComprobante && (
+          <div className="modal-overlay" style={{ zIndex: 1200 }} onClick={() => setModalComprobante(null)}>
+            <div className="modal" style={{maxWidth: 600, padding: '24px'}}>
+              <h3 style={{marginBottom: 16}}>Comprobante de Pago</h3>
+              <img src={modalComprobante} alt="Comprobante" style={{width: '100%', borderRadius: 8}} />
+              <button className="btn btn-secondary" style={{marginTop: 16, width: '100%'}} onClick={() => setModalComprobante(null)}>Cerrar</button>
             </div>
           </div>
         )}
