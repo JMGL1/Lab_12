@@ -300,7 +300,14 @@
 .explore-empty p  { font-size: 14px; }
 
 /* Modal de taller */
-.taller-modal { max-width: 580px; padding: 0; overflow: hidden; }
+.taller-modal { 
+  max-width: 580px; 
+  padding: 0; 
+  overflow: hidden; 
+  display: flex; 
+  flex-direction: column; 
+  max-height: 90vh; 
+}
 
 .taller-modal-header {
   display: flex;
@@ -320,7 +327,14 @@
   line-height: 1.2;
 }
 
-.taller-modal-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.taller-modal-body { 
+  padding: 24px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px; 
+  overflow-y: auto; 
+  flex: 1; 
+}
 
 .modal-section {}
 .modal-section-title {
