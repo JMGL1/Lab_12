@@ -243,13 +243,14 @@ function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
     } finally { setProcesando(null); }
   }
 
-  async function handleVerificarPago(id) {
+  async function handleVerificarPago(id, estado) {
     setProcesando(id);
     try {
-      await api.patch(`/inscripciones/${id}/pago`, { estado_pago: 'pagado' });
+      const { data } = await api.patch(`/inscripciones/${id}/pago`, { estado_pago: estado });
+      alert(data.message);
       cargarInscritos();
     } catch (err) {
-      alert('Error al verificar pago');
+      alert('Error al actualizar el estado del pago');
     } finally { setProcesando(null); }
   }
 
@@ -342,8 +343,11 @@ function ModalInscritos({ tallerId, tallerTitulo, onClose }) {
 
                   {i.estado_solicitud === 'aceptada' && i.estado_pago === 'pendiente' && (
                     <div style={{ display: 'flex', gap: 8, marginTop: 8, justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-                      <button className="btn btn-success btn-sm" onClick={() => handleVerificarPago(i.id)} disabled={procesando === i.id}>
-                        {procesando === i.id ? '...' : '💰 Verificar Pago'}
+                      <button className="btn btn-success btn-sm" onClick={() => handleVerificarPago(i.id, 'pagado')} disabled={procesando === i.id}>
+                        {procesando === i.id ? '...' : '💰 Aceptar Pago'}
+                      </button>
+                      <button className="btn btn-danger btn-sm" onClick={() => { if(window.confirm('¿Seguro que deseas rechazar este pago? El alumno tendrá que subir el comprobante de nuevo.')) handleVerificarPago(i.id, 'rechazado'); }} disabled={procesando === i.id}>
+                        ❌ Rechazar Pago
                       </button>
                     </div>
                   )}

@@ -3,6 +3,31 @@ const router  = express.Router();
 const { supabase }   = require('../db/supabase');
 const { verificarToken } = require('../middleware/authMiddleware');
 
+/* ── GET /api/inscripciones/ingresos — Mis ingresos (instructor) ── */
+router.get('/ingresos', verificarToken, async (req, res) => {
+  try {
+    if (req.usuario.rol !== 'instructor') {
+      return res.status(403).json({ error: 'Solo los instructores pueden ver ingresos' });
+    }
+
+    const { data, error } = await supabase
+      .from('inscripciones')
+      .select('*, estudiante:usuarios!estudiante_id(id, nombre, apellido, email), taller:talleres!taller_id(id, titulo, precio, instructor_id)')
+      .eq('estado_pago', 'pagado')
+      .order('inscrito_en', { ascending: false });
+
+    if (error) throw error;
+
+    // Filtrar para asegurarse que el taller pertenece al instructor
+    const ingresos = data.filter(i => String(i.taller.instructor_id) === String(req.usuario.id));
+
+    return res.json({ ingresos });
+  } catch (err) {
+    console.error('❌ Error GET /inscripciones/ingresos:', err.message);
+    return res.status(500).json({ error: 'Error al obtener ingresos' });
+  }
+});
+
 /* ── GET /api/inscripciones/mis — Mis inscripciones (estudiante) ── */
 router.get('/mis', verificarToken, async (req, res) => {
   try {
@@ -61,7 +86,8 @@ router.post('/', verificarToken, async (req, res) => {
         estudiante_id: req.usuario.id,
         estado_solicitud: 'pendiente',
         estado_pago,
-        mensaje_solicitud: mensaje_solicitud?.trim() || null
+        mensaje_solicitud: mensaje_solicitud?.trim() || null,
+        comprobante_pago: req.body.comprobante_pago || null
       }).select('id').single();
 
     if (errInscripcion) throw errInscripcion;
@@ -270,8 +296,8 @@ router.post('/:id/comprobante', verificarToken, async (req, res) => {
 /* ── PATCH /api/inscripciones/:id/pago — Verificar pago (Instructor) ── */
 router.patch('/:id/pago', verificarToken, async (req, res) => {
   try {
-    const { estado_pago } = req.body; // 'pagado'
-    if (estado_pago !== 'pagado') return res.status(400).json({ error: 'Estado de pago inválido' });
+    const { estado_pago } = req.body; // 'pagado' o 'rechazado'
+    if (!['pagado', 'rechazado'].includes(estado_pago)) return res.status(400).json({ error: 'Estado de pago inválido' });
 
     // Buscar inscripción y taller
     const { data: inscripcion, error: errInsc } = await supabase
@@ -287,18 +313,30 @@ router.patch('/:id/pago', verificarToken, async (req, res) => {
       return res.status(403).json({ error: 'No tienes permiso para verificar este pago' });
     }
 
-    // Actualizar estado de pago
+    // Actualizar estado de pago. Si es rechazado, opcionalmente podrías borrar el comprobante_pago,
+    // pero lo dejamos para que el alumno suba uno nuevo y reemplace el anterior
+    const updateData = { estado_pago };
+    
+    // Si queremos, si el instructor rechaza el pago, lo volvemos a poner como pendiente
+    // para que el alumno pueda volver a subir, pero marcamos una bandera de rechazado.
+    // Para simplificar, usaremos estado_pago = 'pendiente' y borramos el comprobante para que suba de nuevo,
+    // o simplemente marcamos como rechazado. 
+    if (estado_pago === 'rechazado') {
+      updateData.estado_pago = 'pendiente'; // vuelve a estar pendiente
+      updateData.comprobante_pago = null;   // se borra el comprobante inválido
+    }
+
     const { error: errUpdate } = await supabase
       .from('inscripciones')
-      .update({ estado_pago })
+      .update(updateData)
       .eq('id', req.params.id);
 
     if (errUpdate) throw errUpdate;
 
-    return res.json({ message: 'Pago verificado exitosamente' });
+    return res.json({ message: estado_pago === 'pagado' ? 'Pago verificado exitosamente' : 'Pago rechazado, se le pedirá al estudiante que vuelva a subirlo' });
   } catch (err) {
     console.error('❌ Error PATCH /inscripciones/:id/pago:', err.message);
-    return res.status(500).json({ error: 'Error al verificar el pago' });
+    return res.status(500).json({ error: 'Error al actualizar el pago' });
   }
 });
 

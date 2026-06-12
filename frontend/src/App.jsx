@@ -7,6 +7,7 @@ import UsuariosPage           from './pages/UsuariosPage';
 import PerfilPage             from './pages/PerfilPage';
 import ExplorePage            from './pages/ExplorePage';
 import TalleresInstructorPage from './pages/TalleresInstructorPage';
+import IngresosInstructorPage from './pages/IngresosInstructorPage';
 import MisInscripcionesPage   from './pages/MisInscripcionesPage';
 import ValidacionTalleresPage from './pages/ValidacionTalleresPage';
 
@@ -72,6 +73,7 @@ function AppRoutes() {
 
       {/* Instructor (y admin puede ver también) */}
       <Route path="/mis-talleres" element={<InstructorRoute><TalleresInstructorPage /></InstructorRoute>} />
+      <Route path="/ingresos" element={<InstructorRoute><IngresosInstructorPage /></InstructorRoute>} />
 
       {/* Estudiante */}
       <Route path="/mis-inscripciones" element={<EstudianteRoute><MisInscripcionesPage /></EstudianteRoute>} />

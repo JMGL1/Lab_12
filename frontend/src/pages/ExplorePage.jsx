@@ -178,14 +178,28 @@ function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
   const [msg, setMsg] = useState('');
   const [isError, setIsError] = useState(false);
   const [mensajeSolicitud, setMensajeSolicitud] = useState('');
+  const [comprobante, setComprobante] = useState('');
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setComprobante(ev.target.result);
+    reader.readAsDataURL(file);
+  }
 
   async function handleInscribirse() {
     setLoading(true); setMsg(''); setIsError(false);
     try {
-      const { data } = await api.post('/inscripciones', { 
+      const payload = {
         taller_id: taller.id,
         mensaje_solicitud: mensajeSolicitud
-      });
+      };
+      if (comprobante) {
+        payload.comprobante_pago = comprobante;
+      }
+
+      const { data } = await api.post('/inscripciones', payload);
       setMsg(data.message);
       onInscribirse(taller.id);
     } catch (err) {
@@ -273,16 +287,38 @@ function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
             </div>
           )}
 
-          {/* Botón inscripción y Mensaje de Solicitud */}
-          {esEstudiante && (
-            <div style={{marginTop:8}}>
-              {yaInscrito ? (
-                <div className="alert alert-success"><span>✓</span> Ya enviaste una solicitud para este taller</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div>
-                    <label className="form-label" style={{ fontSize: 13, marginBottom: 4 }}>
-                      Mensaje para el instructor (Opcional):
+            {/* Botón inscripción y Mensaje de Solicitud */}
+            {esEstudiante && (
+              <div style={{marginTop:8}}>
+                {yaInscrito ? (
+                  <div className="alert alert-success"><span>✓</span> Ya enviaste una solicitud para este taller</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {/* Sección de pago opcional/requerido si el taller cobra */}
+                    {taller.precio > 0 && (
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 8, border: '1px solid var(--border)' }}>
+                        <h5 style={{ fontSize: 14, marginBottom: 8 }}>💳 Pago de Inscripción</h5>
+                        {taller.metodo_pago === 'efectivo' ? (
+                          <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Este curso acepta pago en efectivo presencialmente.</p>
+                        ) : (
+                          <>
+                            {taller.qr_imagen && (
+                              <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                                <p style={{ fontSize: 12, marginBottom: 8 }}>Escanea para pagar (Bs. {taller.precio})</p>
+                                <img src={taller.qr_imagen} alt="QR de Pago" style={{ maxWidth: 150, borderRadius: 8 }} />
+                              </div>
+                            )}
+                            <label className="form-label" style={{ fontSize: 13 }}>Subir captura del comprobante (Opcional por ahora):</label>
+                            <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} disabled={loading || agotado} style={{ padding: '8px' }} />
+                            {comprobante && <img src={comprobante} alt="Preview" style={{ maxHeight: 80, borderRadius: 8, marginTop: 8 }} />}
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="form-label" style={{ fontSize: 13, marginBottom: 4 }}>
+                        Mensaje para el instructor (Opcional):
                     </label>
                     <textarea 
                       className="form-input" 
