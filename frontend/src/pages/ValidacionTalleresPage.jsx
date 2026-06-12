@@ -157,6 +157,35 @@ export default function ValidacionTalleresPage() {
                   <strong>{tallerDetalle.cupos_totales} lugares</strong>
                 </div>
               </div>
+
+              {/* Perfil del Instructor para Validar */}
+              <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', color: 'var(--text-secondary)' }}>👤 Perfil del Instructor</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  {tallerDetalle.instructor?.foto_perfil ? (
+                    <img src={tallerDetalle.instructor.foto_perfil} alt="Instructor" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+                  ) : (
+                    <div className="avatar avatar-lg" style={{background:'var(--gradient-brand)'}}>
+                      {tallerDetalle.instructor?.nombre?.[0]}{tallerDetalle.instructor?.apellido?.[0]}
+                    </div>
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', marginBottom: 4 }}>
+                      {tallerDetalle.instructor?.nombre} {tallerDetalle.instructor?.apellido}
+                    </p>
+                    <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>✉️ {tallerDetalle.instructor?.email}</p>
+                    {tallerDetalle.instructor?.telefono && (
+                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>📞 {tallerDetalle.instructor.telefono}</p>
+                    )}
+                  </div>
+                </div>
+                {tallerDetalle.instructor?.biografia && (
+                  <div style={{ marginTop: '16px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
+                    <strong>Biografía:</strong> <br/>
+                    {tallerDetalle.instructor.biografia}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="modal-actions" style={{display: 'flex', gap: '16px', padding: '16px 24px', background: 'var(--bg-alt)'}}>
               <button className="btn btn-danger" style={{flex: 1}} onClick={() => setTallerRechazar(tallerDetalle)}>
