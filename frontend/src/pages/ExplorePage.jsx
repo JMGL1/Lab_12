@@ -231,7 +231,7 @@ function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal taller-modal" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="modal taller-modal" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
         {/* Header del modal con portada o gradiente */}
         {taller.imagen_portada ? (
           <div className="taller-modal-header" style={{ backgroundImage: `url(${taller.imagen_portada})`, backgroundSize: 'cover', backgroundPosition: 'center', height: 200, position: 'relative' }}>
@@ -258,7 +258,7 @@ function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
           </div>
         )}
 
-        <div className="taller-modal-body" style={{ padding: '24px' }}>
+        <div className="taller-modal-body" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
           {/* Descripción */}
           {taller.descripcion && (
             <div className="modal-section">
