@@ -30,7 +30,7 @@ export default function PerfilPage() {
   const { usuario, actualizarUsuario } = useAuth();
 
   const [form, setForm] = useState({
-    nombre: '', apellido: '', telefono: '', password: '', confirmar: ''
+    nombre: '', apellido: '', telefono: '', password: '', confirmar: '', biografia: '', foto_perfil: ''
   });
   const [loading,  setLoading]  = useState(false);
   const [success,  setSuccess]  = useState('');
@@ -43,14 +43,22 @@ export default function PerfilPage() {
     api.get('/auth/me').then(r => {
       const u = r.data.usuario;
       setPerfil(u);
-      setForm({ nombre: u.nombre, apellido: u.apellido, telefono: u.telefono || '', password: '', confirmar: '' });
+      setForm({ nombre: u.nombre, apellido: u.apellido, telefono: u.telefono || '', biografia: u.biografia || '', foto_perfil: u.foto_perfil || '', password: '', confirmar: '' });
     }).catch(() => {
       if (usuario) {
         setPerfil(usuario);
-        setForm({ nombre: usuario.nombre, apellido: usuario.apellido, telefono: usuario.telefono || '', password: '', confirmar: '' });
+        setForm({ nombre: usuario.nombre, apellido: usuario.apellido, telefono: usuario.telefono || '', biografia: usuario.biografia || '', foto_perfil: usuario.foto_perfil || '', password: '', confirmar: '' });
       }
     });
   }, [usuario]);
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setForm(f => ({ ...f, foto_perfil: ev.target.result }));
+    reader.readAsDataURL(file);
+  }
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -75,7 +83,8 @@ export default function PerfilPage() {
     setSuccess('');
 
     try {
-      const payload = { nombre: form.nombre.trim(), apellido: form.apellido.trim(), telefono: form.telefono.trim() };
+      const payload = { nombre: form.nombre.trim(), apellido: form.apellido.trim(), telefono: form.telefono.trim(), biografia: form.biografia.trim() };
+      if (form.foto_perfil) payload.foto_perfil = form.foto_perfil;
       if (form.password) payload.password = form.password;
 
       const { data } = await api.put(`/usuarios/${perfil.id}`, payload);
@@ -109,7 +118,11 @@ export default function PerfilPage() {
         {/* Cabecera */}
         <div className="perfil-header">
           <div className="perfil-avatar-wrap">
-            <div className="avatar avatar-xl perfil-avatar">{iniciales}</div>
+            {perfil.foto_perfil ? (
+              <img src={perfil.foto_perfil} alt="Avatar" style={{width:100, height:100, borderRadius:'50%', objectFit:'cover', border:'4px solid var(--bg-primary)'}} />
+            ) : (
+              <div className="avatar avatar-xl perfil-avatar">{iniciales}</div>
+            )}
           </div>
           <div className="perfil-header-info">
             <h1 className="perfil-nombre">{perfil.nombre} {perfil.apellido}</h1>
@@ -139,6 +152,16 @@ export default function PerfilPage() {
 
           <form id="perfil-form" onSubmit={handleSubmit}>
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label">Foto de Perfil</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  {form.foto_perfil && (
+                    <img src={form.foto_perfil} alt="Preview" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+                  )}
+                  <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} disabled={loading} style={{ flex: 1, padding: 8 }} />
+                </div>
+              </div>
+
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="perfil-nombre" className="form-label">Nombre *</label>
@@ -167,6 +190,14 @@ export default function PerfilPage() {
                 </label>
                 <input id="perfil-telefono" name="telefono" type="tel" className="form-input"
                   value={form.telefono} onChange={handleChange} placeholder="+591 70000000" disabled={loading}/>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="perfil-biografia" className="form-label">
+                  Biografía / Descripción <span style={{color:'var(--text-muted)'}}>(opcional)</span>
+                </label>
+                <textarea id="perfil-biografia" name="biografia" className="form-input" rows="4"
+                  value={form.biografia} onChange={handleChange} placeholder="Cuéntanos un poco sobre ti..." disabled={loading}/>
               </div>
 
               <hr className="divider"/>

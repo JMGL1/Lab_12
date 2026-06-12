@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 
     let query = supabase
       .from('talleres')
-      .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono)', { count: 'exact' })
+      .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono, biografia, foto_perfil)', { count: 'exact' })
       .eq('activo', true)
       .eq('estado_validacion', 'aprobado')
       .gte('fecha', new Date().toISOString().split('T')[0]);
@@ -76,7 +76,7 @@ router.get('/pendientes', verificarToken, soloAdmin, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('talleres')
-      .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono)')
+      .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono, biografia, foto_perfil)')
       .eq('estado_validacion', 'pendiente')
       .order('creado_en', { ascending: true });
 
@@ -93,7 +93,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('talleres')
-      .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono)')
+      .select('*, instructor:usuarios!instructor_id(id, nombre, apellido, email, telefono, biografia, foto_perfil)')
       .eq('id', req.params.id)
       .single();
 
@@ -126,7 +126,7 @@ router.post('/', verificarToken, async (req, res) => {
     if (req.usuario.rol !== 'instructor' && req.usuario.rol !== 'administrador') {
       return res.status(403).json({ error: 'Solo los instructores pueden crear talleres' });
     }
-    const { titulo, descripcion, categoria, fecha, hora, duracion, precio, modalidad, ubicacion, cupos_totales, metodo_pago, qr_imagen, enlace_comunicacion } = req.body;
+    const { titulo, descripcion, categoria, fecha, hora, duracion, precio, modalidad, ubicacion, cupos_totales, metodo_pago, qr_imagen, enlace_comunicacion, imagen_portada } = req.body;
 
     if (!titulo?.trim() || !categoria || !fecha) {
       return res.status(400).json({ error: 'Título, categoría y fecha son obligatorios' });
@@ -150,6 +150,7 @@ router.post('/', verificarToken, async (req, res) => {
         metodo_pago: metodo_pago || 'efectivo',
         qr_imagen: qr_imagen || null,
         enlace_comunicacion: enlace_comunicacion?.trim() || null,
+        imagen_portada: imagen_portada || null,
         instructor_id: req.usuario.id,
         estado_validacion: 'pendiente'
       })
@@ -167,7 +168,7 @@ router.post('/', verificarToken, async (req, res) => {
 /* ── PUT /api/talleres/:id — Editar taller ── */
 router.put('/:id', verificarToken, instructorPropietario, async (req, res) => {
   try {
-    const { titulo, descripcion, categoria, fecha, hora, duracion, precio, modalidad, ubicacion, cupos_totales, activo, metodo_pago, qr_imagen, enlace_comunicacion } = req.body;
+    const { titulo, descripcion, categoria, fecha, hora, duracion, precio, modalidad, ubicacion, cupos_totales, activo, metodo_pago, qr_imagen, enlace_comunicacion, imagen_portada } = req.body;
     const campos = {};
     if (titulo)       campos.titulo       = titulo.trim();
     if (descripcion !== undefined) campos.descripcion = descripcion?.trim() || null;
@@ -181,6 +182,7 @@ router.put('/:id', verificarToken, instructorPropietario, async (req, res) => {
     if (metodo_pago !== undefined) campos.metodo_pago = metodo_pago;
     if (qr_imagen !== undefined) campos.qr_imagen = qr_imagen || null;
     if (enlace_comunicacion !== undefined) campos.enlace_comunicacion = enlace_comunicacion?.trim() || null;
+    if (imagen_portada !== undefined) campos.imagen_portada = imagen_portada || null;
     if (cupos_totales !== undefined) {
       campos.cupos_totales = Number(cupos_totales);
       campos.cupos_disponibles = Number(cupos_totales);

@@ -3,6 +3,8 @@
 
 -- 1. Columna telefono en usuarios (si no existe)
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono TEXT;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS biografia TEXT;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_perfil TEXT;
 
 -- 2. Arreglar trigger de usuarios
 DROP TRIGGER IF EXISTS usuarios_updated_at ON usuarios;
@@ -80,6 +82,9 @@ ALTER TABLE talleres ADD COLUMN IF NOT EXISTS enlace_comunicacion TEXT;
 
 ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS estado_pago TEXT DEFAULT 'pendiente' CHECK (estado_pago IN ('pendiente', 'pagado', 'exento'));
 ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS comprobante_pago TEXT;
+
+-- 10. Sprint 6: Perfiles Avanzados e Imágenes
+ALTER TABLE talleres ADD COLUMN IF NOT EXISTS imagen_portada TEXT;
 
 -- 9. Verificar resultado
 SELECT table_name FROM information_schema.tables

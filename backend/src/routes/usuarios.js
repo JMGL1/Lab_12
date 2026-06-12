@@ -175,13 +175,15 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
 router.put('/:id', verificarToken, adminOPropietario, async (req, res) => {
   try {
     const esAdmin = req.usuario.rol === 'administrador';
-    const { nombre, apellido, email, password, telefono, rol, activo } = req.body;
+    const { nombre, apellido, email, password, telefono, rol, activo, biografia, foto_perfil } = req.body;
 
     const campos = {};
 
     if (nombre?.trim())   campos.nombre   = nombre.trim();
     if (apellido?.trim()) campos.apellido = apellido.trim();
     if (telefono !== undefined) campos.telefono = telefono?.trim() || null;
+    if (biografia !== undefined) campos.biografia = biografia?.trim() || null;
+    if (foto_perfil !== undefined) campos.foto_perfil = foto_perfil || null;
 
     // Solo admin puede cambiar email, rol y estado activo
     if (esAdmin) {

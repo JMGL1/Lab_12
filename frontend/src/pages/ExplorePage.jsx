@@ -97,16 +97,29 @@ function TallerCard({ taller, onVerDetalle }) {
 
   return (
     <div className="taller-card" onClick={() => onVerDetalle(taller)}>
-      {/* Header con gradiente */}
-      <div className="taller-card-header" style={{ background: cfg.gradient }}>
-        <span className="taller-card-icon">{cfg.icon}</span>
-        <div className="taller-card-badges">
-          <span className="taller-precio-badge">
-            {formatPrecio(taller.precio)}
-          </span>
-          {agotado && <span className="taller-agotado-badge">Sin cupos</span>}
+      {/* Portada o Header con gradiente */}
+      {taller.imagen_portada ? (
+        <div className="taller-card-header" style={{ backgroundImage: `url(${taller.imagen_portada})`, backgroundSize: 'cover', backgroundPosition: 'center', height: 120 }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}></div>
+          <span className="taller-card-icon" style={{ zIndex: 2 }}>{cfg.icon}</span>
+          <div className="taller-card-badges" style={{ zIndex: 2 }}>
+            <span className="taller-precio-badge">
+              {formatPrecio(taller.precio)}
+            </span>
+            {agotado && <span className="taller-agotado-badge">Sin cupos</span>}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="taller-card-header" style={{ background: cfg.gradient }}>
+          <span className="taller-card-icon">{cfg.icon}</span>
+          <div className="taller-card-badges">
+            <span className="taller-precio-badge">
+              {formatPrecio(taller.precio)}
+            </span>
+            {agotado && <span className="taller-agotado-badge">Sin cupos</span>}
+          </div>
+        </div>
+      )}
 
       {/* Cuerpo */}
       <div className="taller-card-body">
@@ -153,9 +166,13 @@ function TallerCard({ taller, onVerDetalle }) {
       {/* Footer */}
       <div className="taller-card-footer">
         <div className="taller-instructor">
-          <div className="avatar avatar-sm" style={{background:'var(--gradient-brand)', fontSize:10}}>
-            {taller.instructor?.nombre?.[0]}{taller.instructor?.apellido?.[0]}
-          </div>
+          {taller.instructor?.foto_perfil ? (
+            <img src={taller.instructor.foto_perfil} alt="Instructor" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />
+          ) : (
+            <div className="avatar avatar-sm" style={{background:'var(--gradient-brand)', fontSize:10}}>
+              {taller.instructor?.nombre?.[0]}{taller.instructor?.apellido?.[0]}
+            </div>
+          )}
           <span>{taller.instructor?.nombre} {taller.instructor?.apellido}</span>
         </div>
         <div className="taller-cupos">
@@ -214,20 +231,34 @@ function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal taller-modal">
-        {/* Header del modal con gradiente */}
-        <div className="taller-modal-header" style={{ background: cfg.gradient }}>
-          <span className="taller-modal-icon">{cfg.icon}</span>
-          <div style={{flex:1}}>
-            <span className="taller-categoria-tag" style={{background:'rgba(255,255,255,0.2)',color:'#fff',borderColor:'rgba(255,255,255,0.3)'}}>
-              {taller.categoria}
-            </span>
-            <h2 className="taller-modal-title">{taller.titulo}</h2>
+      <div className="modal taller-modal" style={{ padding: 0, overflow: 'hidden' }}>
+        {/* Header del modal con portada o gradiente */}
+        {taller.imagen_portada ? (
+          <div className="taller-modal-header" style={{ backgroundImage: `url(${taller.imagen_portada})`, backgroundSize: 'cover', backgroundPosition: 'center', height: 200, position: 'relative' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.2))' }}></div>
+            <span className="taller-modal-icon" style={{ zIndex: 2 }}>{cfg.icon}</span>
+            <div style={{flex:1, zIndex: 2}}>
+              <span className="taller-categoria-tag" style={{background:'rgba(255,255,255,0.2)',color:'#fff',borderColor:'rgba(255,255,255,0.3)'}}>
+                {taller.categoria}
+              </span>
+              <h2 className="taller-modal-title" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{taller.titulo}</h2>
+            </div>
+            <button className="modal-close" onClick={onClose} style={{color:'rgba(255,255,255,0.8)', zIndex: 2}}>✕</button>
           </div>
-          <button className="modal-close" onClick={onClose} style={{color:'rgba(255,255,255,0.8)'}}>✕</button>
-        </div>
+        ) : (
+          <div className="taller-modal-header" style={{ background: cfg.gradient }}>
+            <span className="taller-modal-icon">{cfg.icon}</span>
+            <div style={{flex:1}}>
+              <span className="taller-categoria-tag" style={{background:'rgba(255,255,255,0.2)',color:'#fff',borderColor:'rgba(255,255,255,0.3)'}}>
+                {taller.categoria}
+              </span>
+              <h2 className="taller-modal-title">{taller.titulo}</h2>
+            </div>
+            <button className="modal-close" onClick={onClose} style={{color:'rgba(255,255,255,0.8)'}}>✕</button>
+          </div>
+        )}
 
-        <div className="taller-modal-body">
+        <div className="taller-modal-body" style={{ padding: '24px' }}>
           {/* Descripción */}
           {taller.descripcion && (
             <div className="modal-section">
@@ -252,24 +283,36 @@ function ModalDetalle({ taller, onClose, onInscribirse, inscritoIds }) {
 
           {/* Instructor */}
           <div className="modal-section">
-            <h4 className="modal-section-title">👤 Instructor</h4>
-            <div className="instructor-card">
-              <div className="avatar avatar-lg" style={{background:'var(--gradient-brand)'}}>
-                {taller.instructor?.nombre?.[0]}{taller.instructor?.apellido?.[0]}
-              </div>
-              <div style={{flex:1}}>
-                <p style={{fontWeight:700,fontSize:16,color:'var(--text-primary)',marginBottom:4}}>
-                  {taller.instructor?.nombre} {taller.instructor?.apellido}
-                </p>
-                <p style={{fontSize:13,color:'var(--text-secondary)'}}>{taller.instructor?.email}</p>
-                {taller.instructor?.telefono && (
-                  <p style={{fontSize:13,color:'var(--text-secondary)',marginTop:2}}>📞 {taller.instructor.telefono}</p>
+            <h4 className="modal-section-title">👤 Acerca del Instructor</h4>
+            <div className="instructor-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {taller.instructor?.foto_perfil ? (
+                  <img src={taller.instructor.foto_perfil} alt="Instructor" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div className="avatar avatar-lg" style={{background:'var(--gradient-brand)'}}>
+                    {taller.instructor?.nombre?.[0]}{taller.instructor?.apellido?.[0]}
+                  </div>
                 )}
+                <div style={{flex:1}}>
+                  <p style={{fontWeight:700,fontSize:16,color:'var(--text-primary)',marginBottom:4}}>
+                    {taller.instructor?.nombre} {taller.instructor?.apellido}
+                  </p>
+                  <p style={{fontSize:13,color:'var(--text-secondary)'}}>{taller.instructor?.email}</p>
+                </div>
               </div>
+              
+              {taller.instructor?.biografia && (
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: 12, borderRadius: 8, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  {taller.instructor.biografia}
+                </div>
+              )}
+
               {whatsapp && (
-                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn btn-success btn-sm">
-                  💬 WhatsApp
-                </a>
+                <div style={{ marginTop: 8 }}>
+                  <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn btn-success btn-sm">
+                    💬 Contactar por WhatsApp
+                  </a>
+                </div>
               )}
             </div>
           </div>

@@ -41,7 +41,8 @@ function ModalTaller({ taller, onClose, onGuardar }) {
     cupos_totales:taller?.cupos_totales|| 10,
     metodo_pago:  taller?.metodo_pago  || 'efectivo',
     qr_imagen:    taller?.qr_imagen    || '',
-    enlace_comunicacion: taller?.enlace_comunicacion || ''
+    enlace_comunicacion: taller?.enlace_comunicacion || '',
+    imagen_portada: taller?.imagen_portada || ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,13 +52,11 @@ function ModalTaller({ taller, onClose, onGuardar }) {
     if (error) setError('');
   }
 
-  function handleFileChange(e) {
+  function handleFileChange(e, field) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setForm(f => ({ ...f, qr_imagen: ev.target.result }));
-    };
+    reader.onload = (ev) => setForm(f => ({ ...f, [field]: ev.target.result }));
     reader.readAsDataURL(file);
   }
 
@@ -120,6 +119,12 @@ function ModalTaller({ taller, onClose, onGuardar }) {
             <div className="form-group">
               <label className="form-label">Título del taller *</label>
               <input name="titulo" className="form-input" value={form.titulo} onChange={handleChange} placeholder="Ej: Taller de Fotografía para Principiantes" required disabled={loading}/>
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">Imagen de Portada</label>
+              <input type="file" accept="image/*" className="form-input" onChange={e => handleFileChange(e, 'imagen_portada')} disabled={loading} style={{ padding: '8px' }} />
+              {form.imagen_portada && <img src={form.imagen_portada} alt="Portada" style={{ marginTop: '8px', maxHeight: '150px', borderRadius: '8px', objectFit: 'cover', width: '100%' }} />}
             </div>
 
             <div className="form-group">
@@ -188,9 +193,9 @@ function ModalTaller({ taller, onClose, onGuardar }) {
 
                 {(form.metodo_pago === 'qr' || form.metodo_pago === 'ambos') && (
                   <div className="form-group">
-                    <label className="form-label">Subir imagen del QR *</label>
-                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} disabled={loading} style={{ padding: '8px' }} />
-                    {form.qr_imagen && <img src={form.qr_imagen} alt="QR" style={{ marginTop: '8px', maxHeight: '100px', borderRadius: '8px' }} />}
+                    <label className="form-label">Subir QR de Pago</label>
+                    <input type="file" accept="image/*" className="form-input" onChange={e => handleFileChange(e, 'qr_imagen')} disabled={loading} style={{ padding: 8 }} />
+                    {form.qr_imagen && <img src={form.qr_imagen} alt="QR" style={{ maxHeight: 80, borderRadius: 8, marginTop: 8 }} />}
                   </div>
                 )}
 
